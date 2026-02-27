@@ -28,13 +28,13 @@
     --chart-3: 355.0345 63.3188% 55.0980%;
     --chart-4: 41.1538 72.8972% 58.0392%;
     --chart-5: 223.4483 32.5843% 34.9020%;
-    --sidebar: 216 7.9365% 87.6471%;
-    --sidebar-foreground: 0 0% 20%;
+    --sidebar: 233 55% 14%;
+    --sidebar-foreground: 220 30% 92%;
     --sidebar-primary: 13.2143 73.0435% 54.9020%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 207.6923 46.4286% 89.0196%;
-    --sidebar-accent-foreground: 224.4444 64.2857% 32.9412%;
-    --sidebar-border: 220 13.0435% 90.9804%;
+    --sidebar-accent: 233 45% 24%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 233 40% 20%;
     --sidebar-ring: 13.2143 73.0435% 54.9020%;
     --font-sans: Outfit, sans-serif;
     --font-serif: Merriweather, serif;

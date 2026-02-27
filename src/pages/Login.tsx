@@ -73,7 +73,7 @@ export default function Login() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-indigo-950 via-indigo-900 to-indigo-800 px-4 py-8">
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-[hsl(233,55%,9%)] via-[hsl(233,55%,14%)] to-[hsl(233,50%,20%)] px-4 py-8">
       <div className="w-full max-w-md space-y-6">
 
         {/* ── Brand ── */}
