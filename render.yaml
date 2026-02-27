@@ -1,0 +1,26 @@
+services:
+  - type: web
+    name: smart-attendance-backend
+    runtime: node
+    rootDir: backend
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3000
+      - key: MONGO_URI
+        sync: false   # set this in the Render dashboard (Environment tab)
+      - key: JWT_SECRET
+        sync: false   # set in dashboard
+      - key: JWT_EXPIRES_IN
+        value: 7d
+      - key: ORIGIN
+        sync: false   # set to your frontend URL in dashboard
+      - key: ADMIN_EMAIL
+        value: admin@gmail.com
+      - key: ADMIN_PASSWORD
+        sync: false   # set in dashboard
+      - key: ADMIN_NAME
+        value: Administrator
