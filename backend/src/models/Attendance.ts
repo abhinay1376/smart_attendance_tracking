@@ -37,7 +37,7 @@ const attendanceSchema = new Schema<IAttendance>(
     subjectId:  { type: String, required: true, trim: true },
     date:       { type: String, required: true, match: /^\d{4}-\d{2}-\d{2}$/ },
     status:     { type: String, required: true, enum: ['present', 'absent'] },
-    engagement: { type: Number, required: true, min: 1, max: 5 },
+    engagement: { type: Number, required: true, min: 1, max: 5, default: 3 },
     createdAt:  { type: Number, required: true },
     syncedAt:   { type: Date,   default: () => new Date() },
   },

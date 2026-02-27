@@ -32,7 +32,8 @@ interface AttendancePayload {
   subjectId:  string
   date:       string
   status:     'present' | 'absent'
-  engagement: number
+  engagement?: number   // optional — older offline records may not carry this
+  active?:    boolean   // frontend flag; mapped to engagement when present
   createdAt:  number
 }
 
@@ -50,8 +51,8 @@ function validate(r: AttendancePayload): string | null {
   if (!r.subjectId || typeof r.subjectId !== 'string')  return 'subjectId is required'
   if (!r.date      || !/^\d{4}-\d{2}-\d{2}$/.test(r.date)) return 'date must be YYYY-MM-DD'
   if (r.status !== 'present' && r.status !== 'absent')  return "status must be 'present' or 'absent'"
-  if (typeof r.engagement !== 'number' || r.engagement < 1 || r.engagement > 5)
-    return 'engagement must be a number 1–5'
+  if (r.engagement !== undefined && (typeof r.engagement !== 'number' || r.engagement < 1 || r.engagement > 5))
+    return 'engagement must be a number 1–5 when provided'
   if (typeof r.createdAt !== 'number')                  return 'createdAt must be a unix timestamp'
   return null
 }
@@ -94,12 +95,19 @@ export async function syncAttendance(
           date:      record.date,
         }
 
+        // Resolve engagement: use explicit value, derive from active flag, or default to 3
+        const engagement =
+          typeof record.engagement === 'number' ? record.engagement
+          : record.active === true              ? 4
+          : record.active === false             ? 2
+          : 3
+
         const update = {
           $set: {
             id:         record.id,
             courseId:   record.courseId,
             status:     record.status,
-            engagement: record.engagement,
+            engagement,
             createdAt:  record.createdAt,
           },
           $setOnInsert: {
