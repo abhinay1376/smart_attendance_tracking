@@ -144,10 +144,10 @@ export default function HodAttendance() {
   // ── Stat cards ─────────────────────────────────────────────────────────────
 
   const statCards = [
-    { label: 'Total Students',   value: String(totalStudents), Icon: Users,        color: '#3b82f6' },
-    { label: 'Overall %',        value: `${overallPct}%`,      Icon: TrendingUp,   color: overallPct >= 75 ? '#10b981' : '#f59e0b' },
-    { label: 'Total Present',    value: String(totalPresent),  Icon: CheckCircle2, color: '#10b981' },
-    { label: 'Active Marks',     value: String(totalActive),   Icon: Zap,          color: '#8b5cf6' },
+    { label: 'Students',        value: String(totalStudents), Icon: Users,        color: '#3b82f6' },
+    { label: 'Avg Attendance',  value: `${overallPct}%`,     Icon: TrendingUp,   color: overallPct >= 75 ? '#10b981' : '#f59e0b' },
+    { label: 'Present Records', value: String(totalPresent), Icon: CheckCircle2, color: '#10b981' },
+    { label: 'Active Marks',    value: String(totalActive),  Icon: Zap,          color: '#8b5cf6' },
   ]
 
   // ── Render ─────────────────────────────────────────────────────────────────

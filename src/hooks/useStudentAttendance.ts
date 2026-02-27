@@ -26,6 +26,7 @@ import {
 }                              from '@/utils/attendanceCalc'
 import { getAllRecords }        from '@/services/db'
 import { seedDemoDataIfEmpty }  from '@/utils/seedDemoData'
+import { apiGetSubjects }       from '@/services/api'
 
 // ─── Return shape ──────────────────────────────────────────────────────────────
 
@@ -71,6 +72,12 @@ export function useStudentAttendance(): StudentAttendanceData {
 
       try {
         await seedDemoDataIfEmpty()
+        // ── Fetch API subjects for label lookup ─────────────────────────────
+        const apiSubs = await apiGetSubjects().catch(() => [])
+        const subjectLabelMap: Record<string, string> = {}
+        MOCK_SUBJECTS.forEach((s) => { subjectLabelMap[s.id] = s.label })       // static fallback
+        apiSubs.forEach((s) => { subjectLabelMap[s._id] = s.name })            // real API names override
+
         // ── Try to build stats from real IndexedDB records ──────────────────
         const allRecords = await getAllRecords()
         const myRecords  = allRecords.filter((r) => r.studentId === userId)
@@ -78,14 +85,10 @@ export function useStudentAttendance(): StudentAttendanceData {
         if (myRecords.length > 0) {
           activeCount = myRecords.filter((r) => r.active === true).length
 
-                  // Group by subjectId and count attended / total
-          const subjectLabelMap: Record<string, string> = {}
-          MOCK_SUBJECTS.forEach((s) => { subjectLabelMap[s.id] = s.label })
-
           const map = new Map<string, { attended: number; total: number; label: string }>()
 
           for (const rec of myRecords) {
-            const label = subjectLabelMap[rec.subjectId] ?? rec.subjectId
+            const label = subjectLabelMap[rec.subjectId] ?? rec.subjectId.slice(0, 8) + '…'
             const entry = map.get(rec.subjectId) ?? { attended: 0, total: 0, label }
             entry.total++
             if (rec.status === 'present') entry.attended++

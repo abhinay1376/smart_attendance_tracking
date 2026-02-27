@@ -26,13 +26,8 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { getAllRecords, type AttendanceRecord } from '@/services/db'
 import { seedDemoDataIfEmpty } from '@/utils/seedDemoData'
-import { MOCK_SUBJECTS } from '@/data/mockData'
-import { apiFacultyGetSubjects, type Subject } from '@/services/api'
+import { apiGetSubjects, apiFacultyGetSubjects, type Subject } from '@/services/api'
 import { useAuth } from '@/context/AuthContext'
-
-// ─── Subject label lookup ─────────────────────────────────────────────────────
-const SUBJECT_LABELS: Record<string, string> = {}
-MOCK_SUBJECTS.forEach((s) => { SUBJECT_LABELS[s.id] = s.label })
 
 // ─── Chart colours ────────────────────────────────────────────────────────────
 const C_PRESENT  = '#6366f1'
@@ -61,6 +56,7 @@ interface DailyPoint {
 export default function Reports() {
   const { user } = useAuth()
   const [allRecords,  setAllRecords]  = useState<AttendanceRecord[]>([])
+  const [subjectMap,  setSubjectMap]  = useState<Record<string, string>>({})
   const [apiSubjects, setApiSubjects] = useState<Subject[]>([])
   const [filterSubj,  setFilterSubj]  = useState<string>('all')
   const [isLoading,   setIsLoading]   = useState(true)
@@ -70,9 +66,18 @@ export default function Reports() {
     ;(async () => {
       try {
         await seedDemoDataIfEmpty()
+        // Fetch all subjects to build the label map
+        const allSubjectsP = apiGetSubjects().catch(() => [] as Subject[])
         const recs = await getAllRecords()
+        const allSubs = await allSubjectsP
         if (cancelled) return
         setAllRecords(recs)
+
+        // Build id→name map from all available subjects
+        const sMap: Record<string, string> = {}
+        allSubs.forEach((s) => { sMap[s._id] = s.name })
+        setSubjectMap(sMap)
+
         if (user?.role === 'faculty') {
           apiFacultyGetSubjects().then((s) => { if (!cancelled) setApiSubjects(s) }).catch(() => {})
         }
@@ -100,7 +105,7 @@ export default function Reports() {
     const map = new Map<string, SubjectStat>()
     for (const r of baseRecords) {
       if (!map.has(r.subjectId)) {
-        const label = SUBJECT_LABELS[r.subjectId] ?? r.subjectId
+        const label = subjectMap[r.subjectId] ?? r.subjectId.slice(0, 8) + '…'
         map.set(r.subjectId, { subjectId: r.subjectId, label, total: 0, present: 0, absent: 0, active: 0, pct: 0 })
       }
       const s = map.get(r.subjectId)!

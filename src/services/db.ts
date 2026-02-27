@@ -219,6 +219,25 @@ export async function deleteRecord(id: string): Promise<void> {
   await withWriteTx((store) => store.delete(id))
 }
 
+/**
+ * Delete every record whose id starts with the "seed-" prefix.
+ * Called by the demo seeder when it needs to replace old fake-id data
+ * with records built from real API student / subject ids.
+ */
+export async function clearDemoRecords(): Promise<void> {
+  const all = await getAllRecords()
+  const demoIds = all.filter((r) => r.id.startsWith('seed-')).map((r) => r.id)
+  if (demoIds.length === 0) return
+  const db = await getDB()
+  await new Promise<void>((resolve, reject) => {
+    const tx    = db.transaction(STORE, 'readwrite')
+    const store = tx.objectStore(STORE)
+    demoIds.forEach((id) => store.delete(id))
+    tx.oncomplete = () => resolve()
+    tx.onerror    = () => reject(tx.error)
+  })
+}
+
 // ─── Read operations ──────────────────────────────────────────────────────────
 
 /**

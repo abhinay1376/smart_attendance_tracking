@@ -1,54 +1,29 @@
 /**
- * seedDemoData.ts
+ * seedDemoData.ts  (v3)
  * ─────────────────────────────────────────────────────────────────────────
- * Populates IndexedDB with realistic mock attendance records so every
- * feature (Reports, Student Dashboard, HoD Attendance, etc.) displays
- * meaningful data in demo / offline mode.
+ * Populates IndexedDB with one month of realistic attendance records using
+ * REAL student & subject IDs fetched from the API.
  *
  * Strategy:
- *  • Only seeds when IndexedDB has 0 records (idempotent).
- *  • Generates sessions for the last 10 weeks on Mon / Wed / Fri.
- *  • Each subject-student pair has a seeded attendance rate so we get
- *    a mix of healthy (>75%), borderline, and low-attendance students.
+ *  1. Fetch real students + subjects from API (falls back to appData localStorage).
+ *  2. Clear any previously seeded records (id prefix "seed-").
+ *  3. Generate Mon–Fri sessions for the past 4 weeks (~20 sessions).
+ *  4. Each student is assigned to subjects based on their classId matching
+ *     the subject code; if no match, assigned to all subjects.
+ *  5. Per-student attendance rate is deterministic from the student id hash.
+ *  6. Completion stored in localStorage key "sa_demo_v3" so it persists
+ *     across page reloads but can be cleared to force a re-seed.
  */
 
-import { getAllRecords, saveBatchRecords, type AttendanceRecord } from '@/services/db'
+import { clearDemoRecords, saveBatchRecords, type AttendanceRecord } from '@/services/db'
+import { apiGetStudents, apiGetSubjects } from '@/services/api'
+import { getStudents, getSubjects }        from '@/services/appData'
 
-// ─── Subject / student fixtures (mirrors mockData.ts) ────────────────────────
-
-const SUBJECTS = [
-  { id: 'sub-1', label: 'Data Structures',      courseId: 'cls-1' },
-  { id: 'sub-2', label: 'Operating Systems',    courseId: 'cls-1' },
-  { id: 'sub-3', label: 'Computer Networks',    courseId: 'cls-1' },
-  { id: 'sub-4', label: 'Data Structures',      courseId: 'cls-2' },
-  { id: 'sub-5', label: 'Software Engineering', courseId: 'cls-2' },
-  { id: 'sub-6', label: 'Digital Electronics',  courseId: 'cls-3' },
-  { id: 'sub-7', label: 'Database Systems',     courseId: 'cls-3' },
-] as const
-
-// stdId, courseId, attendance-rate (0-1), active-rate (fraction of present)
-const STUDENTS: Array<{
-  id: string; courseId: string; rate: number; activeRate: number
-}> = [
-  { id: 'std-101', courseId: 'cls-1', rate: 0.88, activeRate: 0.55 },
-  { id: 'std-102', courseId: 'cls-1', rate: 0.78, activeRate: 0.40 },
-  { id: 'u2',      courseId: 'cls-1', rate: 0.74, activeRate: 0.35 }, // Riya Patel – student@gmail.com
-  { id: 'std-103', courseId: 'cls-1', rate: 0.74, activeRate: 0.35 }, // same person via alt id
-  { id: 'std-104', courseId: 'cls-1', rate: 0.63, activeRate: 0.30 },
-  { id: 'std-105', courseId: 'cls-1', rate: 0.94, activeRate: 0.70 },
-  { id: 'std-106', courseId: 'cls-1', rate: 0.55, activeRate: 0.20 },
-  { id: 'std-201', courseId: 'cls-2', rate: 0.82, activeRate: 0.50 },
-  { id: 'std-202', courseId: 'cls-2', rate: 0.69, activeRate: 0.35 },
-  { id: 'std-203', courseId: 'cls-2', rate: 0.91, activeRate: 0.65 },
-  { id: 'std-204', courseId: 'cls-2', rate: 0.61, activeRate: 0.25 },
-  { id: 'std-301', courseId: 'cls-3', rate: 0.85, activeRate: 0.45 },
-  { id: 'std-302', courseId: 'cls-3', rate: 0.76, activeRate: 0.50 },
-  { id: 'std-303', courseId: 'cls-3', rate: 0.58, activeRate: 0.20 },
-]
+const SEED_FLAG = 'sa_demo_v3'
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-/** Deterministic pseudo-random 0-1 based on string seed (no external deps) */
+/** Deterministic pseudo-random 0-1 from an arbitrary string key */
 function seededRandom(seed: string): number {
   let h = 0xdeadbeef
   for (let i = 0; i < seed.length; i++) {
@@ -58,66 +33,133 @@ function seededRandom(seed: string): number {
   return (h >>> 0) / 0xffffffff
 }
 
-/** Return ISO date strings for Mon/Wed/Fri sessions in the last N weeks */
-function sessionDates(weeksBack: number): string[] {
-  const dates: string[] = []
+/**
+ * Return ISO date strings for Mon–Fri in the past N weeks.
+ * Covers exactly one month (~20 business days for 4 weeks).
+ */
+function businessDates(weeksBack: number): string[] {
   const today = new Date('2026-02-28')
+  const dates: string[] = []
 
   for (let w = weeksBack; w >= 0; w--) {
-    for (const dayOffset of [0, 2, 4]) {          // Mon=0, Wed=2, Fri=4
+    for (let dow = 1; dow <= 5; dow++) {           // Mon=1 … Fri=5
       const d = new Date(today)
-      d.setDate(today.getDate() - w * 7 - (today.getDay() === 0 ? 6 : today.getDay() - 1) + dayOffset)
-      if (d <= today) {
+      // Start of this week (Monday)
+      const diffToMonday = (today.getDay() + 6) % 7
+      d.setDate(today.getDate() - diffToMonday - w * 7 + (dow - 1))
+      if (d <= today && d > new Date('2025-01-01')) {
         dates.push(d.toISOString().slice(0, 10))
       }
     }
   }
-  return [...new Set(dates)].sort()                // deduplicate + sort
+  return [...new Set(dates)].sort()
 }
 
-const SESSION_DATES = sessionDates(10)             // ~30 sessions
+const SESSION_DATES = businessDates(4)   // ~20 sessions over the past month
+
+// ─── Per-student rate ─────────────────────────────────────────────────────────
+
+function studentRate(studentId: string): { rate: number; activeRate: number } {
+  const r = seededRandom(studentId + '-rate')
+  let rate: number
+  if (r < 0.15)      rate = 0.50 + r * 1.0
+  else if (r < 0.35) rate = 0.65 + (r - 0.15) * 1.5
+  else if (r < 0.80) rate = 0.75 + (r - 0.35) * 0.8
+  else               rate = 0.86 + (r - 0.80) * 0.7
+  const activeRate = 0.25 + seededRandom(studentId + '-active') * 0.50
+  return { rate, activeRate }
+}
 
 // ─── Main export ──────────────────────────────────────────────────────────────
 
-let _seeded = false   // in-memory flag – avoids repeated DB checks in one session
+let _running = false
 
 export async function seedDemoDataIfEmpty(): Promise<void> {
-  if (_seeded) return
-  try {
-    const existing = await getAllRecords()
-    if (existing.length > 0) { _seeded = true; return }
+  if (_running) return
+  if (localStorage.getItem(SEED_FLAG)) return
+  _running = true
 
+  try {
+    // ── 1. Fetch real students ─────────────────────────────────────────────
+    // studentId → set of enrolled subject codes (from classId field)
+    let students: Array<{ id: string; enrolledCodes: string[] }> = []
+    try {
+      const apiStudents = await apiGetStudents()
+      students = apiStudents.map((s) => ({
+        id:            s._id,
+        enrolledCodes: Array.isArray(s.classId) ? s.classId : [],
+      }))
+    } catch {
+      students = getStudents().map((s) => ({
+        id:            s.id,
+        enrolledCodes: s.classId ? [s.classId] : [],
+      }))
+    }
+
+    // ── 2. Fetch real subjects ─────────────────────────────────────────────
+    let subjects: Array<{ id: string; code: string; courseId: string }> = []
+    try {
+      const apiSubjects = await apiGetSubjects()
+      subjects = apiSubjects.map((s) => ({ id: s._id, code: s.code, courseId: s.code }))
+    } catch {
+      subjects = getSubjects().map((s) => ({ id: s.id, code: s.code, courseId: s.code }))
+    }
+
+    if (students.length === 0 || subjects.length === 0) {
+      console.warn('[seed] No students or subjects – skipping demo seed.')
+      return
+    }
+
+    // ── 3. Clear old fake-id seed records ─────────────────────────────────
+    await clearDemoRecords()
+
+    // ── 4. Resolve which subjects each student attends ────────────────────
+    // If student has enrolled subject codes, only those subjects apply.
+    // Otherwise (open enrollment), student attends all subjects.
+    function getStudentSubjects(enrolledCodes: string[]) {
+      if (enrolledCodes.length === 0) return subjects
+      const matched = subjects.filter((s) => enrolledCodes.includes(s.code))
+      return matched.length > 0 ? matched : subjects
+    }
+
+    // ── 5. Generate records ────────────────────────────────────────────────
     const records: AttendanceRecord[] = []
 
-    for (const subject of SUBJECTS) {
-      const studentsInCourse = STUDENTS.filter((s) => s.courseId === subject.courseId)
+    for (const student of students) {
+      const { rate, activeRate } = studentRate(student.id)
+      const mySubjects           = getStudentSubjects(student.enrolledCodes)
 
-      for (const session of SESSION_DATES) {
-        for (const stu of studentsInCourse) {
-          const key     = `${stu.id}-${subject.id}-${session}`
-          const r       = seededRandom(key)
-          const isPresent = r < stu.rate
-          const isActive  = isPresent && seededRandom(key + '-active') < stu.activeRate
+      for (const subject of mySubjects) {
+        for (const date of SESSION_DATES) {
+          const key       = `${student.id}-${subject.id}-${date}`
+          const isPresent = seededRandom(key) < rate
+          const isActive  = isPresent && seededRandom(key + '-act') < activeRate
 
           records.push({
             id:        `seed-${key}`,
-            studentId: stu.id,
-            courseId:  stu.courseId,
+            studentId: student.id,
+            courseId:  subject.courseId,
             subjectId: subject.id,
-            date:      session,
+            date,
             status:    isPresent ? 'present' : 'absent',
             active:    isActive,
             createdAt: Date.now(),
-            synced:    true,   // demo records – no need to push to server
+            synced:    true,
           })
         }
       }
     }
 
+    // ── 6. Persist and mark as done ───────────────────────────────────────
     await saveBatchRecords(records)
-    _seeded = true
-    console.info(`[seed] Inserted ${records.length} demo attendance records into IndexedDB`)
+    localStorage.setItem(SEED_FLAG, '1')
+    console.info(
+      `[seed] ✓ ${records.length} demo records inserted`,
+      `(${students.length} students × ${subjects.length} subjects × ${SESSION_DATES.length} sessions)`,
+    )
   } catch (err) {
     console.warn('[seed] Failed to seed demo data:', err)
+  } finally {
+    _running = false
   }
 }
