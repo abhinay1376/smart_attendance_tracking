@@ -37,7 +37,7 @@ export interface StudentAttendanceData {
     percentage: number
     isLow:      boolean
   }
-  /** Count of records where the student was marked Active */
+  /** Count of sessions where student was marked Active by faculty */
   activeSessions: number
   /** True while the async load is in-flight */
   isLoading: boolean
@@ -73,7 +73,6 @@ export function useStudentAttendance(): StudentAttendanceData {
         const myRecords  = allRecords.filter((r) => r.studentId === userId)
 
         if (myRecords.length > 0) {
-          // Count active sessions
           activeCount = myRecords.filter((r) => r.active === true).length
 
           // Group by subjectId and count attended / total

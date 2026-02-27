@@ -164,23 +164,21 @@ function AttendanceForm({
                         />
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        disabled={!isPresent}
-                        onClick={() => toggleActive(row.student.id)}
-                        className={cn(
-                          'flex items-center gap-1 rounded px-2.5 py-1 text-xs font-semibold border transition-colors',
-                          row.active && isPresent
-                            ? 'bg-indigo-600 text-white border-indigo-600'
-                            : 'border-border text-muted-foreground bg-transparent',
-                          !isPresent && 'cursor-not-allowed opacity-40',
-                        )}
-                      >
-                        <Zap size={11} />
-                        Active
-                      </button>
-                    </div>
+                    <button
+                      type="button"
+                      disabled={!isPresent}
+                      onClick={() => toggleActive(row.student.id)}
+                      className={cn(
+                        'flex items-center gap-1 rounded px-2.5 py-1 text-xs font-semibold border transition-colors',
+                        row.active && isPresent
+                          ? 'bg-indigo-600 text-white border-indigo-600'
+                          : 'border-border text-muted-foreground bg-transparent',
+                        !isPresent && 'cursor-not-allowed opacity-40',
+                      )}
+                    >
+                      <Zap size={11} />
+                      Active
+                    </button>
                   </div>
                 )
               })}

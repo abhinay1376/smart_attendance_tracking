@@ -2,14 +2,12 @@ import {
   LayoutDashboard,
   ClipboardCheck,
   BarChart3,
-  Settings,
   Users,
   BookOpen,
   GraduationCap,
   FileBarChart2,
   UserPlus,
   MessageSquare,
-  Upload,
   BookMarked,
   FileSpreadsheet,
   type LucideIcon,
@@ -24,12 +22,12 @@ export interface NavItem {
 
 export const NAV_CONFIG: Record<Role, NavItem[]> = {
   faculty: [
-    { label: 'Dashboard',  to: '/faculty/dashboard',       icon: LayoutDashboard },
-    { label: 'Attendance', to: '/faculty/attendance',       icon: ClipboardCheck  },
-    { label: 'Att. Data',  to: '/faculty/attendance-data',  icon: FileSpreadsheet },
-    { label: 'Courses',    to: '/faculty/courses',          icon: BookOpen        },
-    { label: 'Helpdesk',   to: '/faculty/helpdesk',         icon: MessageSquare   },
-    { label: 'Reports',    to: '/faculty/reports',          icon: BarChart3       },
+    { label: 'Dashboard',     to: '/faculty/dashboard',       icon: LayoutDashboard },
+    { label: 'Attendance',    to: '/faculty/attendance',       icon: ClipboardCheck  },
+    { label: 'Att. Data',     to: '/faculty/attendance-data',  icon: FileSpreadsheet },
+    { label: 'Courses',       to: '/faculty/courses',          icon: BookOpen        },
+    { label: 'Helpdesk',      to: '/faculty/helpdesk',         icon: MessageSquare   },
+    { label: 'Reports',       to: '/faculty/reports',          icon: BarChart3       },
   ],
 
   student: [

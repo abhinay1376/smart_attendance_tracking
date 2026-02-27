@@ -85,8 +85,7 @@ export interface Student {
   _id: string
   name: string
   email: string
-  rollNo: string   // plain-text registration number (for display)
-  regNo?: string   // hashed — may be absent from API responses
+  regNo: string
   phone?: string
   classId?: string[]   // array of subject codes the student is enrolled in
   addedBy?: string

@@ -99,7 +99,7 @@ export function useFacultyDashboard(): FacultyDashboardData {
           setStats({
             courses,
             sessions:  DEMO_SCHEDULE.length,
-            recorded:  todayRecords.length,    // total student rows saved today
+            recorded:  markedSubjectIds.size,
             pending:   sync.unsyncedCount,
           })
           setSchedule(enriched)
