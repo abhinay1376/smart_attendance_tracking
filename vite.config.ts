@@ -59,14 +59,15 @@ export default defineConfig({
             },
           },
           {
-            // Cache API calls with NetworkFirst (sync when online)
-            urlPattern: /\/api\/.*/i,
+            // Cache backend API calls — matches /faculty/*, /student/*, /admin/*,
+            // /auth/*, /attendance/* on any host (works for both localhost:3000 and Render).
+            urlPattern: /\/(faculty|student|admin|auth|attendance|health)(\/|$|\?)/i,
             handler: 'NetworkFirst',
             options: {
               cacheName: 'api-cache',
               networkTimeoutSeconds: 10,
               expiration: {
-                maxEntries: 100,
+                maxEntries: 200,
                 maxAgeSeconds: 60 * 60 * 24, // 24 hours
               },
               cacheableResponse: { statuses: [0, 200] },

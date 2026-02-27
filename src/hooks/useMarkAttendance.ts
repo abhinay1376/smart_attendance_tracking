@@ -1,9 +1,27 @@
 import { useCallback, useEffect, useState } from 'react'
 import { saveBatchRecords, getAllRecords, type AttendanceRecord } from '@/services/db'
-import { apiFacultyGetStudents, apiFacultyGetSubjects, type Subject } from '@/services/api'
+import { apiFacultyGetStudents, apiFacultyGetSubjects, type Subject, type Student as ApiStudent } from '@/services/api'
 import { generateId } from '@/utils/helpers'
 import { useAuth } from '@/context/AuthContext'
 import { notifyFacultyConsecutiveAbsent } from '@/services/notifications'
+
+// ─── localStorage cache helpers ───────────────────────────────────────────────
+
+const CACHE_SUBJECTS_KEY = 'sa_faculty_subjects'
+const CACHE_STUDENTS_PFX = 'sa_faculty_students_'
+
+function cacheSubjects(data: Subject[]) {
+  try { localStorage.setItem(CACHE_SUBJECTS_KEY, JSON.stringify(data)) } catch { /* quota */ }
+}
+function getCachedSubjects(): Subject[] {
+  try { return JSON.parse(localStorage.getItem(CACHE_SUBJECTS_KEY) ?? 'null') ?? [] } catch { return [] }
+}
+function cacheStudents(code: string, data: ApiStudent[]) {
+  try { localStorage.setItem(CACHE_STUDENTS_PFX + code, JSON.stringify(data)) } catch { /* quota */ }
+}
+function getCachedStudents(code: string): ApiStudent[] {
+  try { return JSON.parse(localStorage.getItem(CACHE_STUDENTS_PFX + code) ?? 'null') ?? [] } catch { return [] }
+}
 
 // ─── Local student shape (preserves compatibility with MarkAttendance UI) ──────
 
@@ -57,32 +75,62 @@ export function useMarkAttendance(date?: string): UseMarkAttendanceReturn {
   const [savedCount,      setSavedCount]      = useState<number | null>(null)
   const [error,           setError]           = useState<string | null>(null)
 
-  /** Load faculty's assigned subjects once on mount */
+  /** Load faculty's assigned subjects — network first, cache fallback */
   useEffect(() => {
+    // Immediately show cached subjects so offline users see the dropdown
+    const cached = getCachedSubjects()
+    if (cached.length > 0) setSubjects(cached)
+
     apiFacultyGetSubjects()
-      .then(setSubjects)
-      .catch(() => { /* silently ignore – dropdown stays empty */ })
+      .then((fresh) => {
+        setSubjects(fresh)
+        cacheSubjects(fresh)          // update cache on success
+      })
+      .catch(() => {
+        // If network fails and we had no cached data, subjects stays []
+        // If we had cached data it's already in state — nothing to do
+      })
   }, [])
 
-  /** When subject selection changes, load students for that subject */
+  /** When subject selection changes, load students — network first, cache fallback */
   useEffect(() => {
     if (!subjectId) { setRows([]); return }
     const sub = subjects.find((s) => s._id === subjectId)
     if (!sub) { setRows([]); return }
 
     setLoadingStudents(true)
-    setRows([])
     setSavedCount(null)
     setError(null)
 
+    // Show cached students instantly so the list is visible offline
+    const cachedStudents = getCachedStudents(sub.code)
+    if (cachedStudents.length > 0) {
+      setRows(
+        cachedStudents.map((s) => ({
+          student: {
+            id:      s._id,
+            name:    s.name,
+            rollNo:  s.rollNo ?? s.email?.split('@')[0] ?? '',
+            classId: Array.isArray(s.classId) ? s.classId.join(',') : (s.classId ?? ''),
+          },
+          status: 'present',
+          active: false,
+        })),
+      )
+      setLoadingStudents(false)
+    } else {
+      setRows([])
+    }
+
     apiFacultyGetStudents(sub.code)
       .then((apiStudents) => {
+        cacheStudents(sub.code, apiStudents)   // refresh cache
         setRows(
           apiStudents.map((s) => ({
             student: {
               id:      s._id,
               name:    s.name,
-              rollNo:  s.email?.split('@')[0] ?? '',
+              rollNo:  s.rollNo ?? s.email?.split('@')[0] ?? '',
               classId: Array.isArray(s.classId) ? s.classId.join(',') : (s.classId ?? ''),
             },
             status: 'present',
@@ -90,7 +138,12 @@ export function useMarkAttendance(date?: string): UseMarkAttendanceReturn {
           })),
         )
       })
-      .catch(() => setError('Failed to load students. Please try again.'))
+      .catch(() => {
+        // Network failed — cached rows are already shown; only show error if cache was empty
+        if (cachedStudents.length === 0) {
+          setError('Offline — no cached students for this subject yet. Please connect and try again.')
+        }
+      })
       .finally(() => setLoadingStudents(false))
   }, [subjectId, subjects])
 
