@@ -46,6 +46,7 @@ export async function getMyStudents(req: Request, res: Response, next: NextFunct
 
     const students = await Student
       .find(query)
+      .select('-regNo')   // never expose the hashed password-equivalent
       .sort({ name: 1 })
 
     res.json(students)
@@ -78,6 +79,7 @@ export async function addStudent(req: Request, res: Response, next: NextFunction
         id:       student.id,
         name:     student.name,
         email:    student.email,
+        rollNo:   student.rollNo,
         phone:    student.phone,
         classId:  student.classId,
         addedBy:  student.addedBy,

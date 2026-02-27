@@ -19,8 +19,8 @@ export interface IAttendance extends Document {
   /** ISO date string "YYYY-MM-DD" */
   date:       string
   status:     'present' | 'absent'
-  /** Engagement score 1-5  */
-  engagement: number
+  /** Whether the student was actively participating */
+  active:     boolean
   /** Unix ms – when the client created this record  */
   createdAt:  number
   /** When the server stored it */
@@ -36,9 +36,9 @@ const attendanceSchema = new Schema<IAttendance>(
     courseId:   { type: String, required: true, trim: true },
     subjectId:  { type: String, required: true, trim: true },
     date:       { type: String, required: true, match: /^\d{4}-\d{2}-\d{2}$/ },
-    status:     { type: String, required: true, enum: ['present', 'absent'] },
-    engagement: { type: Number, required: true, min: 1, max: 5 },
-    createdAt:  { type: Number, required: true },
+    status:     { type: String,  required: true, enum: ['present', 'absent'] },
+    active:     { type: Boolean, required: true, default: false },
+    createdAt:  { type: Number,  required: true },
     syncedAt:   { type: Date,   default: () => new Date() },
   },
   {

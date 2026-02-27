@@ -116,7 +116,7 @@ export default function HodAttendance() {
         return {
           studentId:  id,
           name:       student?.name  ?? 'Unknown Student',
-          regNo:      student?.regNo ?? id.slice(-6).toUpperCase(),
+            regNo:      student?.rollNo ?? id.slice(-6).toUpperCase(),
           total:      e.total,
           present:    e.present,
           absent:     e.absent,

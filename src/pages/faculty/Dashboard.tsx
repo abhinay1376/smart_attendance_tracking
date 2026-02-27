@@ -188,7 +188,7 @@ export default function FacultyDashboard() {
         />
         <StatCard
           label="Students Recorded"
-          value={`${stats.recorded}/${stats.sessions}`}
+          value={stats.recorded}
           icon={Users}
           accent="bg-emerald-100 text-emerald-600"
         />

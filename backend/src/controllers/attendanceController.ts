@@ -32,7 +32,7 @@ interface AttendancePayload {
   subjectId:  string
   date:       string
   status:     'present' | 'absent'
-  engagement: number
+  active:     boolean
   createdAt:  number
 }
 
@@ -50,8 +50,7 @@ function validate(r: AttendancePayload): string | null {
   if (!r.subjectId || typeof r.subjectId !== 'string')  return 'subjectId is required'
   if (!r.date      || !/^\d{4}-\d{2}-\d{2}$/.test(r.date)) return 'date must be YYYY-MM-DD'
   if (r.status !== 'present' && r.status !== 'absent')  return "status must be 'present' or 'absent'"
-  if (typeof r.engagement !== 'number' || r.engagement < 1 || r.engagement > 5)
-    return 'engagement must be a number 1–5'
+  if (typeof r.active !== 'boolean')                     return 'active must be a boolean'
   if (typeof r.createdAt !== 'number')                  return 'createdAt must be a unix timestamp'
   return null
 }
@@ -99,7 +98,7 @@ export async function syncAttendance(
             id:         record.id,
             courseId:   record.courseId,
             status:     record.status,
-            engagement: record.engagement,
+            active:     record.active,
             createdAt:  record.createdAt,
           },
           $setOnInsert: {
