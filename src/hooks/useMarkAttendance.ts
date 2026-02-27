@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { saveBatchRecords, getAllRecords, type AttendanceRecord } from '@/services/db'
 import { apiFacultyGetStudents, apiFacultyGetSubjects, type Subject } from '@/services/api'
-import { generateId, todayISO } from '@/utils/helpers'
+import { generateId } from '@/utils/helpers'
 import { useAuth } from '@/context/AuthContext'
 import { notifyFacultyConsecutiveAbsent } from '@/services/notifications'
 
@@ -45,8 +45,10 @@ export interface UseMarkAttendanceReturn {
 
 // ─── Hook ─────────────────────────────────────────────────────────────────────
 
-export function useMarkAttendance(): UseMarkAttendanceReturn {
+/** Pass the ISO date for which attendance is being marked (default: today) */
+export function useMarkAttendance(date?: string): UseMarkAttendanceReturn {
   const { user }                                          = useAuth()
+  const sessionDate = date ?? new Date().toISOString().slice(0, 10)
   const [subjects,        setSubjects]        = useState<Subject[]>([])
   const [subjectId,       setSubjectIdRaw]    = useState('')
   const [rows,            setRows]            = useState<AttendanceRow[]>([])
@@ -134,13 +136,12 @@ export function useMarkAttendance(): UseMarkAttendanceReturn {
     setSaving(true)
     setError(null)
 
-    const today = todayISO()
     const records: AttendanceRecord[] = rows.map((r) => ({
       id:         generateId(),
       studentId:  r.student.id,
       courseId:   sub.code,       // subject code used as course identifier
       subjectId,
-      date:       today,
+      date:       sessionDate,    // use the selected calendar date
       status:     r.status,
       engagement: r.engagement,
       synced:     false,
