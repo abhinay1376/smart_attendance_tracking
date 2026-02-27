@@ -159,10 +159,34 @@ export async function removeStudent(req: Request, res: Response, next: NextFunct
 
 // ─── Subjects ─────────────────────────────────────────────────────────────────
 
+// ─── Helper: enrich subjects ──────────────────────────────────────────────────
+// The DB stores assignedFaculty as string[] (emails).
+// The frontend expects { name, email }[].  Resolve names in one query here.
+
+async function enrichSubjects(subjects: InstanceType<typeof Subject>[]) {
+  const allEmails = [...new Set(subjects.flatMap((s) => s.assignedFaculty as string[]))]
+  const users = allEmails.length
+    ? await User.find({ email: { $in: allEmails } }, 'name email').lean()
+    : []
+  const nameMap = new Map(users.map((u) => [u.email, u.name]))
+
+  return subjects.map((s) => ({
+    _id:             s._id,
+    name:            s.name,
+    code:            s.code,
+    createdAt:       s.createdAt,
+    assignedFaculty: (s.assignedFaculty as string[]).map((email) => ({
+      name:  nameMap.get(email) ?? email,   // fallback to email if user not found
+      email,
+    })),
+  }))
+}
+
 export async function listSubjects(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const subjects = await Subject.find().sort({ createdAt: -1 })
-    res.json(subjects)
+    const enriched = await enrichSubjects(subjects)
+    res.json(enriched)
   } catch (err) { next(err) }
 }
 
@@ -224,7 +248,8 @@ export async function assignFacultyToSubject(req: Request, res: Response, next: 
       return
     }
 
-    res.json(subject)
+    const [enriched] = await enrichSubjects([subject])
+    res.json(enriched)
   } catch (err) { next(err) }
 }
 
@@ -243,7 +268,8 @@ export async function removeFacultyFromSubject(req: Request, res: Response, next
       return
     }
 
-    res.json(subject)
+    const [enriched] = await enrichSubjects([subject])
+    res.json(enriched)
   } catch (err) { next(err) }
 }
 
