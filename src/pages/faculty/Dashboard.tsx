@@ -21,7 +21,6 @@ import {
   CloudUpload,
   Loader2,
   RefreshCw,
-  Users,
   WifiOff,
 } from 'lucide-react'
 
@@ -191,12 +190,6 @@ export default function FacultyDashboard() {
           value={stats.sessions}
           icon={ClipboardCheck}
           accent="bg-violet-100 text-violet-600"
-        />
-        <StatCard
-          label="Students Recorded"
-          value={`${stats.recorded}/${stats.sessions}`}
-          icon={Users}
-          accent="bg-emerald-100 text-emerald-600"
         />
         <StatCard
           label="Pending Sync"

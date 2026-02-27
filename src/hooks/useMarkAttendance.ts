@@ -82,7 +82,7 @@ export function useMarkAttendance(date?: string): UseMarkAttendanceReturn {
             student: {
               id:      s._id,
               name:    s.name,
-              rollNo:  s.regNo ?? '',
+              rollNo:  s.email?.split('@')[0] ?? '',
               classId: Array.isArray(s.classId) ? s.classId.join(',') : (s.classId ?? ''),
             },
             status: 'present',

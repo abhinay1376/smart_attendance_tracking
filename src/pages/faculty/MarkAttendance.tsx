@@ -150,7 +150,7 @@ function AttendanceForm({
                       <div className="min-w-0">
                         <p className="truncate text-sm font-semibold">{row.student.name}</p>
                         <p className="text-xs text-muted-foreground font-mono">
-                          {row.student.rollNo} · #{String(idx + 1).padStart(2, '0')}
+                          #{String(idx + 1).padStart(2, '0')}
                         </p>
                       </div>
                       <div className="flex shrink-0 items-center gap-2">
@@ -190,7 +190,6 @@ function AttendanceForm({
                 <thead>
                   <tr className="border-b border-border bg-muted/40">
                     <th className="px-4 py-3 text-left font-medium text-muted-foreground w-16">#</th>
-                    <th className="px-4 py-3 text-left font-medium text-muted-foreground">Roll No</th>
                     <th className="px-4 py-3 text-left font-medium text-muted-foreground">Name</th>
                     <th className="px-4 py-3 text-center font-medium text-muted-foreground">Status</th>
                     <th className="px-4 py-3 text-center font-medium text-muted-foreground w-28">
@@ -211,9 +210,6 @@ function AttendanceForm({
                       >
                         <td className="px-4 py-3 text-muted-foreground font-mono text-xs">
                           {String(idx + 1).padStart(2, '00')}
-                        </td>
-                        <td className="px-4 py-3 font-mono text-xs text-muted-foreground">
-                          {row.student.rollNo}
                         </td>
                         <td className="px-4 py-3 font-medium text-foreground">{row.student.name}</td>
                         <td className="px-4 py-3">

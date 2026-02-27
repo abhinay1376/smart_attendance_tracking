@@ -66,20 +66,22 @@ export default function Reports() {
     ;(async () => {
       try {
         await seedDemoDataIfEmpty()
-        // Fetch all subjects to build the label map
-        const allSubjectsP = apiGetSubjects().catch(() => [] as Subject[])
-        const recs = await getAllRecords()
-        const allSubs = await allSubjectsP
+        // Fetch subjects from both admin and faculty endpoints to build a complete label map
+        const [recs, allSubs, facSubs] = await Promise.all([
+          getAllRecords(),
+          apiGetSubjects().catch(() => [] as Subject[]),
+          apiFacultyGetSubjects().catch(() => [] as Subject[]),
+        ])
         if (cancelled) return
         setAllRecords(recs)
 
-        // Build id→name map from all available subjects
+        // Merge both subject lists into id→name map
         const sMap: Record<string, string> = {}
-        allSubs.forEach((s) => { sMap[s._id] = s.name })
+        ;[...allSubs, ...facSubs].forEach((s) => { sMap[s._id] = s.name })
         setSubjectMap(sMap)
 
-        if (user?.role === 'faculty') {
-          apiFacultyGetSubjects().then((s) => { if (!cancelled) setApiSubjects(s) }).catch(() => {})
+        if (user?.role === 'faculty' && facSubs.length > 0) {
+          setApiSubjects(facSubs)
         }
       } finally {
         if (!cancelled) setIsLoading(false)
