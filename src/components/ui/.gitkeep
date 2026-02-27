@@ -1,0 +1,9 @@
+# Add shadcn/ui components here via:
+#   npx shadcn@latest add <component>
+#
+# Example:
+#   npx shadcn@latest add button
+#   npx shadcn@latest add card
+#   npx shadcn@latest add badge
+#   npx shadcn@latest add toast
+#   npx shadcn@latest add dialog
