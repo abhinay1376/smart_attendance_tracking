@@ -1,11 +1,20 @@
 import { useCallback, useEffect, useState } from 'react'
 import { saveBatchRecords, getAllRecords, type AttendanceRecord } from '@/services/db'
-import { studentsForClass, type Student } from '@/data/mockData'
+import { apiFacultyGetStudents, apiFacultyGetSubjects, type Subject } from '@/services/api'
 import { generateId, todayISO } from '@/utils/helpers'
 import { useAuth } from '@/context/AuthContext'
 import { notifyFacultyConsecutiveAbsent } from '@/services/notifications'
 
-// ─── Per-student row state ─────────────────────────────────────────────────
+// ─── Local student shape (preserves compatibility with MarkAttendance UI) ──────
+
+interface Student {
+  id:      string   // maps to API _id
+  name:    string
+  rollNo:  string   // maps to API regNo
+  classId: string
+}
+
+// ─── Per-student row state ─────────────────────────────────────────────────────
 
 export interface AttendanceRow {
   student:    Student
@@ -13,14 +22,14 @@ export interface AttendanceRow {
   engagement: number   // 1–5
 }
 
-// ─── Return type ───────────────────────────────────────────────────────────
+// ─── Return type ───────────────────────────────────────────────────────────────
 
 export interface UseMarkAttendanceReturn {
-  // selections
-  classId:       string
-  subjectId:     string
-  setClassId:    (id: string) => void
-  setSubjectId:  (id: string) => void
+  // subject list + selection (replaces the old class+subject mock system)
+  subjects:        Subject[]
+  subjectId:       string
+  setSubjectId:    (id: string) => void
+  loadingStudents: boolean
 
   // table data
   rows:           AttendanceRow[]
@@ -34,32 +43,57 @@ export interface UseMarkAttendanceReturn {
   handleSave:  () => Promise<void>
 }
 
-// ─── Hook ─────────────────────────────────────────────────────────────────
+// ─── Hook ─────────────────────────────────────────────────────────────────────
 
 export function useMarkAttendance(): UseMarkAttendanceReturn {
-  const { user }                                        = useAuth()
-  const [classId,    setClassIdRaw]   = useState('')
-  const [subjectId,  setSubjectId]    = useState('')
-  const [rows,       setRows]         = useState<AttendanceRow[]>([])
-  const [saving,     setSaving]       = useState(false)
-  const [savedCount, setSavedCount]   = useState<number | null>(null)
-  const [error,      setError]        = useState<string | null>(null)
+  const { user }                                          = useAuth()
+  const [subjects,        setSubjects]        = useState<Subject[]>([])
+  const [subjectId,       setSubjectIdRaw]    = useState('')
+  const [rows,            setRows]            = useState<AttendanceRow[]>([])
+  const [loadingStudents, setLoadingStudents] = useState(false)
+  const [saving,          setSaving]          = useState(false)
+  const [savedCount,      setSavedCount]      = useState<number | null>(null)
+  const [error,           setError]           = useState<string | null>(null)
 
-  /** When class changes, rebuild the student rows and reset subject */
+  /** Load faculty's assigned subjects once on mount */
   useEffect(() => {
-    if (!classId) { setRows([]); setSubjectId(''); return }
+    apiFacultyGetSubjects()
+      .then(setSubjects)
+      .catch(() => { /* silently ignore – dropdown stays empty */ })
+  }, [])
 
-    const students = studentsForClass(classId)
-    setRows(
-      students.map((s) => ({ student: s, status: 'present', engagement: 3 })),
-    )
-    setSubjectId('')
+  /** When subject selection changes, load students for that subject */
+  useEffect(() => {
+    if (!subjectId) { setRows([]); return }
+    const sub = subjects.find((s) => s._id === subjectId)
+    if (!sub) { setRows([]); return }
+
+    setLoadingStudents(true)
+    setRows([])
     setSavedCount(null)
     setError(null)
-  }, [classId])
 
-  const setClassId = useCallback((id: string) => {
-    setClassIdRaw(id)
+    apiFacultyGetStudents(sub.code)
+      .then((apiStudents) => {
+        setRows(
+          apiStudents.map((s) => ({
+            student: {
+              id:      s._id,
+              name:    s.name,
+              rollNo:  s.regNo ?? '',
+              classId: s.classId ?? '',
+            },
+            status:     'present',
+            engagement: 3,
+          })),
+        )
+      })
+      .catch(() => setError('Failed to load students. Please try again.'))
+      .finally(() => setLoadingStudents(false))
+  }, [subjectId, subjects])
+
+  const setSubjectId = useCallback((id: string) => {
+    setSubjectIdRaw(id)
     setSavedCount(null)
     setError(null)
   }, [])
@@ -87,12 +121,13 @@ export function useMarkAttendance(): UseMarkAttendanceReturn {
 
   /** Persist all rows to IndexedDB */
   const handleSave = useCallback(async () => {
-    if (!classId || !subjectId) {
-      setError('Please select a class and subject before saving.')
+    const sub = subjects.find((s) => s._id === subjectId)
+    if (!sub) {
+      setError('Please select a subject before saving.')
       return
     }
     if (rows.length === 0) {
-      setError('No students found for the selected class.')
+      setError('No students found for the selected subject.')
       return
     }
 
@@ -103,12 +138,12 @@ export function useMarkAttendance(): UseMarkAttendanceReturn {
     const records: AttendanceRecord[] = rows.map((r) => ({
       id:         generateId(),
       studentId:  r.student.id,
-      courseId:   classId,
+      courseId:   sub.code,       // subject code used as course identifier
       subjectId,
       date:       today,
       status:     r.status,
       engagement: r.engagement,
-      synced:     false,            // ← always false on local save
+      synced:     false,
       createdAt:  Date.now(),
     }))
 
@@ -116,7 +151,7 @@ export function useMarkAttendance(): UseMarkAttendanceReturn {
       await saveBatchRecords(records)
       setSavedCount(records.length)
 
-      // ── Consecutive-absent notifications (non-critical) ────────────────
+      // ── Consecutive-absent notifications (non-critical) ─────────────────
       const absentRows = rows.filter((r) => r.status === 'absent')
       if (absentRows.length > 0 && user) {
         try {
@@ -135,7 +170,7 @@ export function useMarkAttendance(): UseMarkAttendanceReturn {
                 user.email,
                 row.student.name,
                 row.student.id,
-                subjectId,   // best label we have in this hook
+                sub.name,
                 run,
               )
             }
@@ -147,10 +182,10 @@ export function useMarkAttendance(): UseMarkAttendanceReturn {
     } finally {
       setSaving(false)
     }
-  }, [classId, subjectId, rows])
+  }, [subjectId, subjects, rows, user])
 
   return {
-    classId,  subjectId,  setClassId, setSubjectId,
+    subjects, subjectId, setSubjectId, loadingStudents,
     rows, toggleStatus, setEngagement,
     saving, savedCount, error, handleSave,
   }

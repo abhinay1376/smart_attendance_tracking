@@ -1,8 +1,7 @@
-import { useMemo, type ReactNode } from 'react'
+import { type ReactNode } from 'react'
 import { Loader2, Save, CheckCircle2, AlertCircle, Users } from 'lucide-react'
 
 import { useMarkAttendance } from '@/hooks/useMarkAttendance'
-import { MOCK_CLASSES, subjectsForClass } from '@/data/mockData'
 import { cn } from '@/utils/helpers'
 
 import { Button }                          from '@/components/ui/button'
@@ -49,16 +48,10 @@ function SummaryStrip({ present, absent }: { present: number; absent: number }) 
 
 export default function MarkAttendance() {
   const {
-    classId, subjectId, setClassId, setSubjectId,
+    subjects, subjectId, setSubjectId, loadingStudents,
     rows, toggleStatus, setEngagement,
     saving, savedCount, error, handleSave,
   } = useMarkAttendance()
-
-  /** Subjects filtered for the chosen class */
-  const subjects = useMemo(
-    () => (classId ? subjectsForClass(classId) : []),
-    [classId],
-  )
 
   const presentCount = rows.filter((r) => r.status === 'present').length
   const absentCount  = rows.length - presentCount
@@ -70,7 +63,7 @@ export default function MarkAttendance() {
       <div>
         <h1 className="text-2xl font-bold tracking-tight text-foreground">Mark Attendance</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Select a class and subject, then mark each student's attendance and engagement.
+          Select a subject, then mark each student's attendance and engagement.
         </p>
       </div>
 
@@ -78,38 +71,24 @@ export default function MarkAttendance() {
       <Card>
         <CardHeader className="pb-4">
           <CardTitle className="text-base">Session Details</CardTitle>
-          <CardDescription>Choose the class and subject for this session.</CardDescription>
+          <CardDescription>Choose the subject for this session.</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-
-            {/* Class */}
-            <FormRow label="Class / Section">
-              <Select value={classId} onValueChange={setClassId}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select class…" />
-                </SelectTrigger>
-                <SelectContent>
-                  {MOCK_CLASSES.map((c) => (
-                    <SelectItem key={c.id} value={c.id}>{c.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </FormRow>
 
             {/* Subject */}
             <FormRow label="Subject">
               <Select
                 value={subjectId}
                 onValueChange={setSubjectId}
-                disabled={!classId}
+                disabled={subjects.length === 0}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder={classId ? 'Select subject…' : 'Select class first'} />
+                  <SelectValue placeholder={subjects.length === 0 ? 'No subjects assigned…' : 'Select subject…'} />
                 </SelectTrigger>
                 <SelectContent>
                   {subjects.map((s) => (
-                    <SelectItem key={s.id} value={s.id}>{s.label}</SelectItem>
+                    <SelectItem key={s._id} value={s._id}>{s.name}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -318,13 +297,21 @@ export default function MarkAttendance() {
         </div>
       )}
 
-      {/* Empty state – no class selected */}
-      {rows.length === 0 && !classId && (
+      {/* Empty state */}
+      {rows.length === 0 && !loadingStudents && (
         <div className="rounded-xl border border-dashed border-border bg-card p-12 text-center">
           <Users size={32} className="mx-auto mb-3 text-muted-foreground/40" />
           <p className="text-sm font-medium text-muted-foreground">
-            Select a class to load the student list.
+            {subjectId ? 'No students enrolled in this subject yet.' : 'Select a subject to load the student list.'}
           </p>
+        </div>
+      )}
+
+      {/* Loading state */}
+      {loadingStudents && (
+        <div className="rounded-xl border border-border bg-card p-12 text-center">
+          <Loader2 size={28} className="mx-auto mb-3 animate-spin text-muted-foreground/50" />
+          <p className="text-sm text-muted-foreground">Loading students…</p>
         </div>
       )}
     </div>

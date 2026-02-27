@@ -28,10 +28,26 @@ import { Attendance } from '../models/Attendance'
 
 export async function getMyStudents(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
+    // Find all subjects assigned to this faculty, collect their codes as classIds
+    const mySubjects = await Subject.find({ assignedFaculty: req.user!.email }).select('code').lean()
+    const myCodes    = mySubjects.map((s) => s.code as string)
+
+    // Optional ?classId= filter (used by mark-attendance to scope to one subject)
+    const classIdFilter = req.query.classId as string | undefined
+
+    const query = classIdFilter
+      ? { classId: classIdFilter }                // exact subject scope
+      : {
+          $or: [
+            { addedBy: req.user!.email },
+            ...(myCodes.length > 0 ? [{ classId: { $in: myCodes } }] : []),
+          ],
+        }
+
     const students = await Student
-      .find({ addedBy: req.user!.email })
-      .select('-regNo')
-      .sort({ createdAt: -1 })
+      .find(query)
+      .sort({ name: 1 })
+
     res.json(students)
   } catch (err) { next(err) }
 }

@@ -202,8 +202,15 @@ export default function HodSubjects() {
 
   function handleImport(subjectId: string) {
     const state     = getUpload(subjectId)
+    const sub       = subjects.find((s) => s._id === subjectId)
     const validRows = state.rows.filter((r) => !r._error)
-    apiBulkAddStudents(validRows.map((r) => ({ name: r.name, email: r.email, regNo: r.regNo, phone: r.phone || undefined })))
+    apiBulkAddStudents(validRows.map((r) => ({
+      name:    r.name,
+      email:   r.email,
+      regNo:   r.regNo,
+      phone:   r.phone || undefined,
+      classId: sub?.code,           // link students to this subject
+    })))
       .then((res) => setUpload(subjectId, { phase: 'done', result: res }))
       .catch((err) => setUpload(subjectId, { parseErr: err instanceof Error ? err.message : 'Import failed.' }))
   }

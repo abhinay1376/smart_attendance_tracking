@@ -244,8 +244,9 @@ export function apiGetHodTickets(params?: { escalated?: boolean; status?: 'open'
 
 // ─── Faculty ──────────────────────────────────────────────────────────────────
 
-export function apiFacultyGetStudents() {
-  return apiFetch<Student[]>('/faculty/students')
+export function apiFacultyGetStudents(classId?: string) {
+  const q = classId ? `?classId=${encodeURIComponent(classId)}` : ''
+  return apiFetch<Student[]>(`/faculty/students${q}`)
 }
 
 export function apiFacultyAddStudent(data: {
