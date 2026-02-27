@@ -2,113 +2,79 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ─── shadcn/ui + Indigo theme ───────────────────────────────────────── */
 @layer base {
   :root {
-    --background: 204.0000 12.1951% 91.9608%;
-    --foreground: 0 0% 20%;
-    --card: 0 0% 100%;
-    --card-foreground: 0 0% 20%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 20%;
-    --primary: 15.1765 72.6496% 54.1176%;
+    /* Neutrals */
+    --background:   0 0% 100%;
+    --foreground:   240 10% 3.9%;
+    --card:         0 0% 100%;
+    --card-foreground: 240 10% 3.9%;
+    --popover:      0 0% 100%;
+    --popover-foreground: 240 10% 3.9%;
+    --muted:        240 4.8% 95.9%;
+    --muted-foreground: 240 3.8% 46.1%;
+    --border:       240 5.9% 90%;
+    --input:        240 5.9% 90%;
+
+    /* Indigo as primary */
+    --primary:          239 84% 67%;   /* indigo-500  */
     --primary-foreground: 0 0% 100%;
-    --secondary: 217.2973 44.0476% 32.9412%;
-    --secondary-foreground: 0 0% 100%;
-    --muted: 210 20.0000% 98.0392%;
-    --muted-foreground: 220 8.9362% 46.0784%;
-    --accent: 207.6923 46.4286% 89.0196%;
-    --accent-foreground: 224.4444 64.2857% 32.9412%;
-    --destructive: 0 84.2365% 60.1961%;
-    --destructive-foreground: 0 0% 100%;
-    --border: 0 0% 80%;
-    --input: 220 15.7895% 96.2745%;
-    --ring: 13.2143 73.0435% 54.9020%;
-    --chart-1: 210 37.2549% 60%;
-    --chart-2: 17.2500 72.7273% 56.8627%;
-    --chart-3: 355.0345 63.3188% 55.0980%;
-    --chart-4: 41.1538 72.8972% 58.0392%;
-    --chart-5: 223.4483 32.5843% 34.9020%;
-    --sidebar: 233 55% 14%;
-    --sidebar-foreground: 220 30% 92%;
-    --sidebar-primary: 13.2143 73.0435% 54.9020%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 233 45% 24%;
-    --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 233 40% 20%;
-    --sidebar-ring: 13.2143 73.0435% 54.9020%;
-    --font-sans: Outfit, sans-serif;
-    --font-serif: Merriweather, serif;
-    --font-mono: Fira Code, monospace;
-    --radius: 0.5rem;
-    --shadow-x: 0px;
-    --shadow-y: 1px;
-    --shadow-blur: 3px;
-    --shadow-spread: 0px;
-    --shadow-opacity: 0.1;
-    --shadow-color: #1a1a1a;
-    --shadow-2xs: 0px 1px 3px 0px hsl(0 0% 10.1961% / 0.05);
-    --shadow-xs: 0px 1px 3px 0px hsl(0 0% 10.1961% / 0.05);
-    --shadow-sm: 0px 1px 3px 0px hsl(0 0% 10.1961% / 0.10), 0px 1px 2px -1px hsl(0 0% 10.1961% / 0.10);
-    --shadow: 0px 1px 3px 0px hsl(0 0% 10.1961% / 0.10), 0px 1px 2px -1px hsl(0 0% 10.1961% / 0.10);
-    --shadow-md: 0px 1px 3px 0px hsl(0 0% 10.1961% / 0.10), 0px 2px 4px -1px hsl(0 0% 10.1961% / 0.10);
-    --shadow-lg: 0px 1px 3px 0px hsl(0 0% 10.1961% / 0.10), 0px 4px 6px -1px hsl(0 0% 10.1961% / 0.10);
-    --shadow-xl: 0px 1px 3px 0px hsl(0 0% 10.1961% / 0.10), 0px 8px 10px -1px hsl(0 0% 10.1961% / 0.10);
-    --shadow-2xl: 0px 1px 3px 0px hsl(0 0% 10.1961% / 0.25);
-    --tracking-normal: 0em;
-    --spacing: 0.25rem;
+
+    /* Indigo-50 as secondary */
+    --secondary:          238 100% 97%;
+    --secondary-foreground: 239 84% 40%;
+
+    /* Indigo-100 as accent */
+    --accent:             238 100% 95%;
+    --accent-foreground:  239 84% 35%;
+
+    --destructive:        0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+
+    --ring:          239 84% 67%;
+    --radius:        0.5rem;
+
+    /* ── Inverted sidebar (dark indigo) ── */
+    --sidebar-bg:     239 68% 21%;  /* indigo-900 */
+    --sidebar-fg:     240 100% 97%; /* indigo-50  */
+    --sidebar-accent: 240 60% 30%;  /* indigo-800 */
+    --sidebar-border: 239 50% 28%;
+    --sidebar-ring:   239 84% 67%;
   }
 
   .dark {
-    --background: 0 0% 10.1961%;
-    --foreground: 0 0% 89.8039%;
-    --card: 0 0% 12.5490%;
-    --card-foreground: 0 0% 89.8039%;
-    --popover: 0 0% 12.5490%;
-    --popover-foreground: 0 0% 89.8039%;
-    --primary: 15.1765 72.6496% 54.1176%;
+    --background:   240 10% 3.9%;
+    --foreground:   0 0% 98%;
+    --card:         240 10% 3.9%;
+    --card-foreground: 0 0% 98%;
+    --popover:      240 10% 3.9%;
+    --popover-foreground: 0 0% 98%;
+    --muted:        240 3.7% 15.9%;
+    --muted-foreground: 240 5% 64.9%;
+    --border:       240 3.7% 15.9%;
+    --input:        240 3.7% 15.9%;
+
+    --primary:          239 84% 67%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 216.1905 44.0559% 28.0392%;
-    --secondary-foreground: 0 0% 89.8039%;
-    --muted: 0 0% 16.4706%;
-    --muted-foreground: 0 0% 50.1961%;
-    --accent: 223.6364 34.3750% 25.0980%;
-    --accent-foreground: 213.3333 96.9231% 87.2549%;
-    --destructive: 0 84.2365% 60.1961%;
-    --destructive-foreground: 0 0% 100%;
-    --border: 0 0% 20.7843%;
-    --input: 0 0% 18.8235%;
-    --ring: 13.2143 73.0435% 54.9020%;
-    --chart-1: 210 37.0787% 65.0980%;
-    --chart-2: 17.2500 72.7273% 56.8627%;
-    --chart-3: 355.0345 63.3188% 55.0980%;
-    --chart-4: 41.1538 72.8972% 58.0392%;
-    --chart-5: 223.4483 32.5843% 34.9020%;
-    --sidebar: 0 0% 12.1569%;
-    --sidebar-foreground: 0 0% 89.8039%;
-    --sidebar-primary: 13.2143 73.0435% 54.9020%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 223.6364 34.3750% 25.0980%;
-    --sidebar-accent-foreground: 213.3333 96.9231% 87.2549%;
-    --sidebar-border: 0 0% 20.7843%;
-    --sidebar-ring: 13.2143 73.0435% 54.9020%;
-    --font-sans: Outfit, sans-serif;
-    --font-serif: Merriweather, serif;
-    --font-mono: Fira Code, monospace;
-    --radius: 0.5rem;
-    --shadow-x: 0px;
-    --shadow-y: 1px;
-    --shadow-blur: 3px;
-    --shadow-spread: 0px;
-    --shadow-opacity: 0.1;
-    --shadow-color: #1a1a1a;
-    --shadow-2xs: 0px 1px 3px 0px hsl(0 0% 10.1961% / 0.05);
-    --shadow-xs: 0px 1px 3px 0px hsl(0 0% 10.1961% / 0.05);
-    --shadow-sm: 0px 1px 3px 0px hsl(0 0% 10.1961% / 0.10), 0px 1px 2px -1px hsl(0 0% 10.1961% / 0.10);
-    --shadow: 0px 1px 3px 0px hsl(0 0% 10.1961% / 0.10), 0px 1px 2px -1px hsl(0 0% 10.1961% / 0.10);
-    --shadow-md: 0px 1px 3px 0px hsl(0 0% 10.1961% / 0.10), 0px 2px 4px -1px hsl(0 0% 10.1961% / 0.10);
-    --shadow-lg: 0px 1px 3px 0px hsl(0 0% 10.1961% / 0.10), 0px 4px 6px -1px hsl(0 0% 10.1961% / 0.10);
-    --shadow-xl: 0px 1px 3px 0px hsl(0 0% 10.1961% / 0.10), 0px 8px 10px -1px hsl(0 0% 10.1961% / 0.10);
-    --shadow-2xl: 0px 1px 3px 0px hsl(0 0% 10.1961% / 0.25);
+
+    --secondary:          238 40% 15%;
+    --secondary-foreground: 240 100% 80%;
+
+    --accent:             238 40% 20%;
+    --accent-foreground:  240 100% 85%;
+
+    --destructive:        0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+
+    --ring:    239 84% 67%;
+
+    /* Sidebar stays dark-inverted */
+    --sidebar-bg:     239 68% 12%;
+    --sidebar-fg:     240 100% 97%;
+    --sidebar-accent: 240 60% 22%;
+    --sidebar-border: 239 50% 18%;
+    --sidebar-ring:   239 84% 67%;
   }
 }
 
@@ -116,7 +82,35 @@
   * {
     @apply border-border;
   }
+
+  html {
+    @apply antialiased;
+    font-family: 'Figtree', ui-sans-serif, system-ui, sans-serif;
+  }
+
   body {
     @apply bg-background text-foreground;
   }
+
+  /* Smooth scrolling */
+  html {
+    scroll-behavior: smooth;
+  }
+
+  /* Focus ring consistent with brand */
+  :focus-visible {
+    @apply outline-none ring-2 ring-ring ring-offset-2;
+  }
 }
+
+/* ─── Utility: hide scrollbar but keep scroll ─────────────────────────── */
+@layer utilities {
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}
+

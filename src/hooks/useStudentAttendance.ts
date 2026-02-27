@@ -86,13 +86,17 @@ export function useStudentAttendance(): StudentAttendanceData {
           activeCount = myRecords.filter((r) => r.active === true).length
 
           const map = new Map<string, { attended: number; total: number; label: string }>()
+          let ordinal = 1
 
           for (const rec of myRecords) {
-            const label = subjectLabelMap[rec.subjectId] ?? rec.subjectId.slice(0, 8) + '…'
-            const entry = map.get(rec.subjectId) ?? { attended: 0, total: 0, label }
+            if (!map.has(rec.subjectId)) {
+              // Use API name if available, otherwise "Subject N" (never show a raw ID)
+              const label = subjectLabelMap[rec.subjectId] ?? `Subject ${ordinal++}`
+              map.set(rec.subjectId, { attended: 0, total: 0, label })
+            }
+            const entry = map.get(rec.subjectId)!
             entry.total++
             if (rec.status === 'present') entry.attended++
-            map.set(rec.subjectId, entry)
           }
 
           rawStats = Array.from(map.entries()).map(([subjectId, e]) => ({
