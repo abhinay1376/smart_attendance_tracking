@@ -96,7 +96,8 @@ export default function FacultyDashboard() {
     sub:     string
     ring:    string   // border colour
     bg:      string
-    iconCls: string
+    iconCls: string   // applied to icon only (may include animate-spin)
+    textCls: string   // applied to text (color only, never animated)
   }> = {
     offline: {
       icon:    WifiOff,
@@ -105,6 +106,7 @@ export default function FacultyDashboard() {
       ring:    'border-slate-200',
       bg:      'bg-slate-50',
       iconCls: 'text-slate-400',
+      textCls: 'text-slate-400',
     },
     pending: {
       icon:    CloudUpload,
@@ -113,6 +115,7 @@ export default function FacultyDashboard() {
       ring:    'border-amber-200',
       bg:      'bg-amber-50',
       iconCls: 'text-amber-500',
+      textCls: 'text-amber-500',
     },
     syncing: {
       icon:    Loader2,
@@ -121,6 +124,7 @@ export default function FacultyDashboard() {
       ring:    'border-indigo-200',
       bg:      'bg-indigo-50',
       iconCls: 'text-indigo-500 animate-spin',
+      textCls: 'text-indigo-500',
     },
     synced: {
       icon:    CheckCircle2,
@@ -129,6 +133,7 @@ export default function FacultyDashboard() {
       ring:    'border-emerald-200',
       bg:      'bg-emerald-50',
       iconCls: 'text-emerald-500',
+      textCls: 'text-emerald-500',
     },
     error: {
       icon:    AlertCircle,
@@ -137,6 +142,7 @@ export default function FacultyDashboard() {
       ring:    'border-red-200',
       bg:      'bg-red-50',
       iconCls: 'text-red-500',
+      textCls: 'text-red-500',
     },
   }
 
@@ -168,7 +174,7 @@ export default function FacultyDashboard() {
           )}
         >
           <SyncIcon size={13} className={sp.iconCls} />
-          <span className={sp.iconCls}>{sp.label}</span>
+          <span className={sp.textCls}>{sp.label}</span>
         </button>
       </div>
 
@@ -217,7 +223,7 @@ export default function FacultyDashboard() {
             className={cn('mt-0.5 shrink-0', sp.iconCls)}
           />
           <div>
-            <p className={cn('text-sm font-semibold', sp.iconCls)}>{sp.label}</p>
+            <p className={cn('text-sm font-semibold', sp.textCls)}>{sp.label}</p>
             <p className="mt-0.5 text-xs text-muted-foreground max-w-sm">{sp.sub}</p>
             {sync.lastResult && sync.lastResult.synced > 0 && (
               <p className="mt-1 text-xs text-emerald-600 font-medium">

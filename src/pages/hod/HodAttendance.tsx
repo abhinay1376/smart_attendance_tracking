@@ -23,6 +23,7 @@ import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { getAllRecords, type AttendanceRecord } from '@/services/db'
 import { apiGetStudents, apiGetSubjects, type Student, type Subject } from '@/services/api'
+import { seedDemoDataIfEmpty } from '@/utils/seedDemoData'
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -55,6 +56,7 @@ export default function HodAttendance() {
     let cancelled = false
     ;(async () => {
       try {
+        await seedDemoDataIfEmpty()
         const [records, students, subjectsData] = await Promise.all([
           getAllRecords(),
           apiGetStudents().catch(() => [] as Student[]),

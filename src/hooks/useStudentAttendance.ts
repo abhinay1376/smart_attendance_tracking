@@ -16,6 +16,7 @@ import { useEffect, useState } from 'react'
 import { useAuth }             from '@/context/AuthContext'
 import {
   MOCK_STUDENT_ATTENDANCE,
+  MOCK_SUBJECTS,
   type SubjectAttendanceStat,
 }                              from '@/data/mockData'
 import {
@@ -24,6 +25,7 @@ import {
   type ComputedSubjectStat,
 }                              from '@/utils/attendanceCalc'
 import { getAllRecords }        from '@/services/db'
+import { seedDemoDataIfEmpty }  from '@/utils/seedDemoData'
 
 // ─── Return shape ──────────────────────────────────────────────────────────────
 
@@ -68,6 +70,7 @@ export function useStudentAttendance(): StudentAttendanceData {
       let activeCount = 0
 
       try {
+        await seedDemoDataIfEmpty()
         // ── Try to build stats from real IndexedDB records ──────────────────
         const allRecords = await getAllRecords()
         const myRecords  = allRecords.filter((r) => r.studentId === userId)
@@ -75,11 +78,15 @@ export function useStudentAttendance(): StudentAttendanceData {
         if (myRecords.length > 0) {
           activeCount = myRecords.filter((r) => r.active === true).length
 
-          // Group by subjectId and count attended / total
+                  // Group by subjectId and count attended / total
+          const subjectLabelMap: Record<string, string> = {}
+          MOCK_SUBJECTS.forEach((s) => { subjectLabelMap[s.id] = s.label })
+
           const map = new Map<string, { attended: number; total: number; label: string }>()
 
           for (const rec of myRecords) {
-            const entry = map.get(rec.subjectId) ?? { attended: 0, total: 0, label: rec.subjectId }
+            const label = subjectLabelMap[rec.subjectId] ?? rec.subjectId
+            const entry = map.get(rec.subjectId) ?? { attended: 0, total: 0, label }
             entry.total++
             if (rec.status === 'present') entry.attended++
             map.set(rec.subjectId, entry)
