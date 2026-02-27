@@ -1,6 +1,7 @@
 import { Router } from 'express'
 import { requireAuth, requireRole } from '../middleware/auth'
 import {
+  getApprovedFaculty,
   getMySubjects,
   getMyAttendance,
   getMyTickets,
@@ -12,7 +13,8 @@ const router = Router()
 
 // All student routes are protected
 router.use(requireAuth, requireRole('student'))
-
+// ── Faculty (for helpdesk) ────────────────────────────────────────────────────────
+router.get('/faculty',                      getApprovedFaculty)
 // ── Subjects ────────────────────────────────────────────────────────────────
 router.get('/subjects',                     getMySubjects)
 

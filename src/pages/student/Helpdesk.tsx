@@ -16,7 +16,7 @@ import {
   apiStudentCreateTicket,
   apiStudentFollowUp,
   apiStudentToggleNotifyHod,
-  apiGetFaculty,
+  apiStudentGetFaculty,
   type HelpdeskTicket,
 } from '@/services/api'
 
@@ -76,13 +76,12 @@ export default function StudentHelpdesk() {
 
   useEffect(() => {
     // Load approved faculty for the dropdown
-    apiGetFaculty('approved')
+    apiStudentGetFaculty()
       .then((approved) => {
         const combined = [
-          ...SEED_FACULTY,
-          ...approved
-            .map((f) => ({ name: f.name, email: f.email }))
-            .filter((a) => !SEED_FACULTY.some((s) => s.email === a.email)),
+          ...approved.map((f) => ({ name: f.name, email: f.email })),
+          // keep seed faculty as fallback if not already in API list
+          ...SEED_FACULTY.filter((s) => !approved.some((a) => a.email === s.email)),
         ]
         setFacList(combined)
       })

@@ -303,6 +303,9 @@ export function apiFacultyToggleNotifyHod(ticketId: string, value: boolean) {
 export function apiStudentGetSubjects() {
   return apiFetch<Subject[]>('/student/subjects')
 }
+export function apiStudentGetFaculty() {
+  return apiFetch<{ id: string; name: string; email: string }[]>('/student/faculty')
+}
 export function apiStudentGetTickets() {
   return apiFetch<HelpdeskTicket[]>('/student/helpdesk')
 }

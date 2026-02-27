@@ -15,6 +15,15 @@ import { Helpdesk }   from '../models/Helpdesk'
 import { User }       from '../models/User'
 import { Subject }    from '../models/Subject'
 
+// ─── Faculty list (for helpdesk dropdown) ────────────────────────────────────────────
+
+export async function getApprovedFaculty(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const faculty = await User.find({ role: 'faculty', status: 'approved' }, { name: 1, email: 1 }).sort({ name: 1 })
+    res.json(faculty.map((f) => ({ id: f._id, name: f.name, email: f.email })))
+  } catch (err) { next(err) }
+}
+
 // ─── Subjects ────────────────────────────────────────────────────────────────
 
 export async function getMySubjects(req: Request, res: Response, next: NextFunction): Promise<void> {
