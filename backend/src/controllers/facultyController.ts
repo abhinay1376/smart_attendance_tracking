@@ -67,6 +67,7 @@ export async function addStudent(req: Request, res: Response, next: NextFunction
       name:    name.trim(),
       email:   email.toLowerCase().trim(),
       regNo,
+      rollNo:  regNo.trim(),
       phone:   phone?.trim(),
       classId: classId?.trim(),
       addedBy: req.user!.email,

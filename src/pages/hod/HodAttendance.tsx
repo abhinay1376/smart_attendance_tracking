@@ -111,7 +111,7 @@ export default function HodAttendance() {
       rows.push({
         studentId,
         name:       student?.name   ?? studentId,
-        regNo:      student?.regNo  ?? '—',
+        regNo:      student?.rollNo ?? '—',
         total,
         present,
         absent,
