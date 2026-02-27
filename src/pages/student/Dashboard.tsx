@@ -16,6 +16,7 @@ import {
   CheckCircle2,
   ClipboardCheck,
   TrendingUp,
+  Zap,
 } from 'lucide-react'
 import {
   Bar,
@@ -84,7 +85,7 @@ function ChartTooltip({ active, payload, label }: {
 
 export default function StudentDashboard() {
   const { user }                         = useAuth()
-  const { subjects, overall, isLoading } = useStudentAttendance()
+  const { subjects, overall, activeSessions, isLoading } = useStudentAttendance()
 
   const lowSubjects = subjects.filter((s) => s.isLow)
   const shortCount  = lowSubjects.length
@@ -94,8 +95,8 @@ export default function StudentDashboard() {
     return (
       <div className="space-y-6 animate-pulse">
         <div className="h-8 w-56 rounded-lg bg-muted" />
-        <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-          {Array.from({ length: 4 }).map((_, i) => (
+        <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
+          {Array.from({ length: 5 }).map((_, i) => (
             <div key={i} className="h-24 rounded-xl bg-muted" />
           ))}
         </div>
@@ -129,6 +130,12 @@ export default function StudentDashboard() {
       value: String(shortCount),
       icon:  AlertTriangle,
       color: shortCount > 0 ? '#f59e0b' : '#10b981',
+    },
+    {
+      label: 'Active Sessions',
+      value: String(activeSessions),
+      icon:  Zap,
+      color: '#8b5cf6',
     },
   ] as const
 
@@ -173,7 +180,7 @@ export default function StudentDashboard() {
       )}
 
       {/* ── Stat cards ────────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
         {statCards.map(({ label, value, icon: Icon, color }) => (
           <div
             key={label}

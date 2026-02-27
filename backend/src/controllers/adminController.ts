@@ -118,6 +118,7 @@ export async function bulkAddStudents(req: Request, res: Response, next: NextFun
     }
 
     let added = 0
+    let enrolled = 0   // existing student added to a new subject
     let skipped = 0
     const errors: string[] = []
 
@@ -127,22 +128,37 @@ export async function bulkAddStudents(req: Request, res: Response, next: NextFun
         skipped++
         continue
       }
+
+      const normalEmail = row.email.toLowerCase().trim()
+      const classId     = row.classId?.trim()
+
       try {
-        await Student.create({
-          name:    row.name.trim(),
-          email:   row.email.toLowerCase().trim(),
-          regNo:   row.regNo,
-          phone:   row.phone?.trim(),
-          classId: row.classId?.trim(),
-          addedBy: 'admin',
-        })
-        added++
+        const existing = await Student.findOne({ email: normalEmail })
+
+        if (existing) {
+          // Student already exists — just enrol them in the new subject if needed
+          if (classId && !existing.classId.includes(classId)) {
+            await Student.updateOne({ _id: existing._id }, { $addToSet: { classId } })
+          }
+          enrolled++
+        } else {
+          // New student — create with classId as array
+          await Student.create({
+            name:    row.name.trim(),
+            email:   normalEmail,
+            regNo:   row.regNo,
+            phone:   row.phone?.trim(),
+            classId: classId ? [classId] : [],
+            addedBy: 'admin',
+          })
+          added++
+        }
       } catch {
         skipped++
       }
     }
 
-    res.json({ added, skipped, ...(errors.length > 0 && { errors }) })
+    res.json({ added, enrolled, skipped, ...(errors.length > 0 && { errors }) })
   } catch (err) { next(err) }
 }
 

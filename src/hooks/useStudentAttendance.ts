@@ -37,6 +37,8 @@ export interface StudentAttendanceData {
     percentage: number
     isLow:      boolean
   }
+  /** Count of records where the student was marked Active */
+  activeSessions: number
   /** True while the async load is in-flight */
   isLoading: boolean
 }
@@ -46,9 +48,10 @@ export interface StudentAttendanceData {
 export function useStudentAttendance(): StudentAttendanceData {
   const { user } = useAuth()
 
-  const [subjects,  setSubjects]  = useState<ComputedSubjectStat[]>([])
-  const [overall,   setOverall]   = useState({ attended: 0, total: 0, percentage: 0, isLow: false })
-  const [isLoading, setIsLoading] = useState(true)
+  const [subjects,       setSubjects]       = useState<ComputedSubjectStat[]>([])
+  const [overall,        setOverall]        = useState({ attended: 0, total: 0, percentage: 0, isLow: false })
+  const [activeSessions, setActiveSessions] = useState(0)
+  const [isLoading,      setIsLoading]      = useState(true)
 
   useEffect(() => {
     if (!user) return
@@ -62,6 +65,7 @@ export function useStudentAttendance(): StudentAttendanceData {
       setIsLoading(true)
 
       let rawStats: SubjectAttendanceStat[] = []
+      let activeCount = 0
 
       try {
         // ── Try to build stats from real IndexedDB records ──────────────────
@@ -69,6 +73,9 @@ export function useStudentAttendance(): StudentAttendanceData {
         const myRecords  = allRecords.filter((r) => r.studentId === userId)
 
         if (myRecords.length > 0) {
+          // Count active sessions
+          activeCount = myRecords.filter((r) => r.active === true).length
+
           // Group by subjectId and count attended / total
           const map = new Map<string, { attended: number; total: number; label: string }>()
 
@@ -99,6 +106,7 @@ export function useStudentAttendance(): StudentAttendanceData {
         const computed = computeSubjectStats(rawStats)
         setSubjects(computed)
         setOverall(computeOverall(rawStats))
+        setActiveSessions(activeCount)
         setIsLoading(false)
       }
     }
@@ -107,5 +115,5 @@ export function useStudentAttendance(): StudentAttendanceData {
     return () => { cancelled = true }
   }, [user])
 
-  return { subjects, overall, isLoading }
+  return { subjects, overall, activeSessions, isLoading }
 }

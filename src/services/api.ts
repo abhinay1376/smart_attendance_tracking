@@ -87,7 +87,7 @@ export interface Student {
   email: string
   regNo: string
   phone?: string
-  classId?: string
+  classId?: string[]   // array of subject codes the student is enrolled in
   addedBy?: string
 }
 

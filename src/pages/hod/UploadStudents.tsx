@@ -292,18 +292,6 @@ export default function HodUploadStudents() {
           <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-8 text-center space-y-3">
             <CheckCircle2 size={44} className="mx-auto text-emerald-500" />
             <h2 className="text-xl font-bold text-emerald-800">Import Complete</h2>
-            <div className="flex justify-center gap-6 text-sm">
-              <div>
-                <p className="text-2xl font-bold text-emerald-700">{result.added}</p>
-                <p className="text-xs text-emerald-600">Students added</p>
-              </div>
-              {result.skipped > 0 && (
-                <div>
-                  <p className="text-2xl font-bold text-amber-600">{result.skipped}</p>
-                  <p className="text-xs text-amber-500">Skipped (duplicate email)</p>
-                </div>
-              )}
-            </div>
             <p className="text-xs text-emerald-700">
               Students can now log in with their email address and Reg No as password.
             </p>

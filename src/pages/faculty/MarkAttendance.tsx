@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from 'react'
-import { Loader2, Save, CheckCircle2, AlertCircle, Users, ArrowLeft, CalendarDays } from 'lucide-react'
+import { Loader2, Save, CheckCircle2, AlertCircle, Users, ArrowLeft, CalendarDays, Zap } from 'lucide-react'
 
 import { useMarkAttendance } from '@/hooks/useMarkAttendance'
 import { cn } from '@/utils/helpers'
@@ -9,7 +9,6 @@ import { Button }                          from '@/components/ui/button'
 import { Badge }                           from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Label }                           from '@/components/ui/label'
-import { Input }                           from '@/components/ui/input'
 import { Switch }                          from '@/components/ui/switch'
 import {
   Select, SelectContent, SelectItem,
@@ -65,7 +64,7 @@ function AttendanceForm({
 }) {
   const {
     subjects, subjectId, setSubjectId, loadingStudents,
-    rows, toggleStatus, setEngagement,
+    rows, toggleStatus, toggleActive,
     saving, savedCount, error, handleSave,
   } = useMarkAttendance(date)
 
@@ -133,7 +132,7 @@ function AttendanceForm({
                   Student List
                 </CardTitle>
                 <CardDescription className="mt-1">
-                  Toggle attendance and rate engagement (1 = lowest, 5 = highest).
+                  Toggle attendance and mark active participation.
                 </CardDescription>
               </div>
               <SummaryStrip present={presentCount} absent={absentCount} />
@@ -166,25 +165,21 @@ function AttendanceForm({
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="text-xs text-muted-foreground">Engagement:</span>
-                      <div className="flex gap-1">
-                        {[1, 2, 3, 4, 5].map((dot) => (
-                          <button
-                            key={dot} type="button" disabled={!isPresent}
-                            onClick={() => setEngagement(row.student.id, dot)}
-                            className={cn(
-                              'h-5 w-5 rounded-full border-2 transition-colors focus:outline-none',
-                              dot <= row.engagement && isPresent
-                                ? 'bg-primary border-primary'
-                                : 'bg-transparent border-muted-foreground/25',
-                              !isPresent && 'cursor-not-allowed opacity-40',
-                            )}
-                          />
-                        ))}
-                      </div>
-                      <span className={cn('text-xs font-bold', !isPresent && 'opacity-40')}>
-                        {isPresent ? row.engagement : '—'}
-                      </span>
+                      <button
+                        type="button"
+                        disabled={!isPresent}
+                        onClick={() => toggleActive(row.student.id)}
+                        className={cn(
+                          'flex items-center gap-1 rounded px-2.5 py-1 text-xs font-semibold border transition-colors',
+                          row.active && isPresent
+                            ? 'bg-indigo-600 text-white border-indigo-600'
+                            : 'border-border text-muted-foreground bg-transparent',
+                          !isPresent && 'cursor-not-allowed opacity-40',
+                        )}
+                      >
+                        <Zap size={11} />
+                        Active
+                      </button>
                     </div>
                   </div>
                 )
@@ -200,8 +195,8 @@ function AttendanceForm({
                     <th className="px-4 py-3 text-left font-medium text-muted-foreground">Roll No</th>
                     <th className="px-4 py-3 text-left font-medium text-muted-foreground">Name</th>
                     <th className="px-4 py-3 text-center font-medium text-muted-foreground">Status</th>
-                    <th className="px-4 py-3 text-center font-medium text-muted-foreground w-36">
-                      Engagement (1–5)
+                    <th className="px-4 py-3 text-center font-medium text-muted-foreground w-28">
+                      Active
                     </th>
                   </tr>
                 </thead>
@@ -236,27 +231,22 @@ function AttendanceForm({
                           </div>
                         </td>
                         <td className="px-4 py-3">
-                          <div className="flex items-center justify-center gap-1.5">
-                            <Input
-                              type="number" min={1} max={5}
-                              value={row.engagement}
+                          <div className="flex items-center justify-center">
+                            <button
+                              type="button"
                               disabled={!isPresent}
-                              onChange={(e) => setEngagement(row.student.id, Number(e.target.value))}
-                              className={cn('h-8 w-16 text-center tabular-nums', !isPresent && 'opacity-40 cursor-not-allowed')}
-                            />
-                            <div className="flex gap-0.5">
-                              {[1, 2, 3, 4, 5].map((dot) => (
-                                <button
-                                  key={dot} type="button" disabled={!isPresent}
-                                  onClick={() => setEngagement(row.student.id, dot)}
-                                  className={cn(
-                                    'h-2 w-2 rounded-full transition-colors focus:outline-none',
-                                    dot <= row.engagement && isPresent ? 'bg-primary' : 'bg-muted-foreground/25',
-                                    !isPresent && 'cursor-not-allowed',
-                                  )}
-                                />
-                              ))}
-                            </div>
+                              onClick={() => toggleActive(row.student.id)}
+                              className={cn(
+                                'flex items-center gap-1 rounded px-3 py-1 text-xs font-semibold border transition-colors',
+                                row.active && isPresent
+                                  ? 'bg-indigo-600 text-white border-indigo-600'
+                                  : 'border-border text-muted-foreground bg-transparent',
+                                !isPresent && 'cursor-not-allowed opacity-40',
+                              )}
+                            >
+                              <Zap size={11} />
+                              Active
+                            </button>
                           </div>
                         </td>
                       </tr>

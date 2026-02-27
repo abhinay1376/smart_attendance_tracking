@@ -19,7 +19,7 @@ interface Student {
 export interface AttendanceRow {
   student:    Student
   status:     'present' | 'absent'
-  engagement: number   // 1–5
+  active:     boolean   // actively participating this session
 }
 
 // ─── Return type ───────────────────────────────────────────────────────────────
@@ -32,9 +32,9 @@ export interface UseMarkAttendanceReturn {
   loadingStudents: boolean
 
   // table data
-  rows:           AttendanceRow[]
-  toggleStatus:   (studentId: string) => void
-  setEngagement:  (studentId: string, score: number) => void
+  rows:          AttendanceRow[]
+  toggleStatus:  (studentId: string) => void
+  toggleActive:  (studentId: string) => void
 
   // save
   saving:      boolean
@@ -83,10 +83,10 @@ export function useMarkAttendance(date?: string): UseMarkAttendanceReturn {
               id:      s._id,
               name:    s.name,
               rollNo:  s.regNo ?? '',
-              classId: s.classId ?? '',
+              classId: Array.isArray(s.classId) ? s.classId.join(',') : (s.classId ?? ''),
             },
-            status:     'present',
-            engagement: 3,
+            status: 'present',
+            active: false,
           })),
         )
       })
@@ -111,12 +111,11 @@ export function useMarkAttendance(date?: string): UseMarkAttendanceReturn {
     )
   }, [])
 
-  /** Update engagement score for a student */
-  const setEngagement = useCallback((studentId: string, score: number) => {
-    const clamped = Math.min(5, Math.max(1, score))
+  /** Toggle a student's active participation status */
+  const toggleActive = useCallback((studentId: string) => {
     setRows((prev) =>
       prev.map((r) =>
-        r.student.id === studentId ? { ...r, engagement: clamped } : r,
+        r.student.id === studentId ? { ...r, active: !r.active } : r,
       ),
     )
   }, [])
@@ -139,11 +138,11 @@ export function useMarkAttendance(date?: string): UseMarkAttendanceReturn {
     const records: AttendanceRecord[] = rows.map((r) => ({
       id:         generateId(),
       studentId:  r.student.id,
-      courseId:   sub.code,       // subject code used as course identifier
+      courseId:   sub.code,
       subjectId,
-      date:       sessionDate,    // use the selected calendar date
+      date:       sessionDate,
       status:     r.status,
-      engagement: r.engagement,
+      active:     r.active,
       synced:     false,
       createdAt:  Date.now(),
     }))
@@ -187,7 +186,7 @@ export function useMarkAttendance(date?: string): UseMarkAttendanceReturn {
 
   return {
     subjects, subjectId, setSubjectId, loadingStudents,
-    rows, toggleStatus, setEngagement,
+    rows, toggleStatus, toggleActive,
     saving, savedCount, error, handleSave,
   }
 }

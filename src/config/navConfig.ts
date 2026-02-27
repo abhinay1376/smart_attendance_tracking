@@ -2,14 +2,12 @@ import {
   LayoutDashboard,
   ClipboardCheck,
   BarChart3,
-  Settings,
   Users,
   BookOpen,
   GraduationCap,
   FileBarChart2,
   UserPlus,
   MessageSquare,
-  Upload,
   BookMarked,
   FileSpreadsheet,
   type LucideIcon,
@@ -24,13 +22,12 @@ export interface NavItem {
 
 export const NAV_CONFIG: Record<Role, NavItem[]> = {
   faculty: [
-    { label: 'Dashboard',     to: '/faculty/dashboard',       icon: LayoutDashboard },
-    { label: 'Attendance',    to: '/faculty/attendance',       icon: ClipboardCheck  },
-    { label: 'Att. Data',     to: '/faculty/attendance-data',  icon: FileSpreadsheet },
-    { label: 'Courses',       to: '/faculty/courses',          icon: BookOpen        },
-    { label: 'Helpdesk',      to: '/faculty/helpdesk',         icon: MessageSquare   },
-    { label: 'Reports',       to: '/faculty/reports',          icon: BarChart3       },
-    { label: 'Settings',      to: '/faculty/settings',         icon: Settings        },
+    { label: 'Dashboard',  to: '/faculty/dashboard',       icon: LayoutDashboard },
+    { label: 'Attendance', to: '/faculty/attendance',       icon: ClipboardCheck  },
+    { label: 'Att. Data',  to: '/faculty/attendance-data',  icon: FileSpreadsheet },
+    { label: 'Courses',    to: '/faculty/courses',          icon: BookOpen        },
+    { label: 'Helpdesk',   to: '/faculty/helpdesk',         icon: MessageSquare   },
+    { label: 'Reports',    to: '/faculty/reports',          icon: BarChart3       },
   ],
 
   student: [
@@ -38,19 +35,16 @@ export const NAV_CONFIG: Record<Role, NavItem[]> = {
     { label: 'My Classes', to: '/student/classes',    icon: GraduationCap   },
     { label: 'Attendance', to: '/student/attendance', icon: ClipboardCheck  },
     { label: 'Helpdesk',   to: '/student/helpdesk',   icon: MessageSquare   },
-    { label: 'Settings',   to: '/student/settings',   icon: Settings        },
   ],
 
   hod: [
-    { label: 'Dashboard',       to: '/hod/dashboard',        icon: LayoutDashboard },
-    { label: 'Faculty',         to: '/hod/faculty',          icon: Users           },
-    { label: 'Students',        to: '/hod/students',         icon: GraduationCap   },
-    { label: 'Upload Students', to: '/hod/upload-students',  icon: Upload          },
-    { label: 'Subjects',        to: '/hod/subjects',         icon: BookMarked      },
-    { label: 'Requests',        to: '/hod/requests',         icon: UserPlus        },
-    { label: 'Attendance',      to: '/hod/attendance',       icon: ClipboardCheck  },
-    { label: 'Reports',         to: '/hod/reports',          icon: FileBarChart2   },
-    { label: 'Settings',        to: '/hod/settings',         icon: Settings        },
+    { label: 'Dashboard',  to: '/hod/dashboard',   icon: LayoutDashboard },
+    { label: 'Faculty',    to: '/hod/faculty',     icon: Users           },
+    { label: 'Students',   to: '/hod/students',    icon: GraduationCap   },
+    { label: 'Subjects',   to: '/hod/subjects',    icon: BookMarked      },
+    { label: 'Requests',   to: '/hod/requests',    icon: UserPlus        },
+    { label: 'Attendance', to: '/hod/attendance',  icon: ClipboardCheck  },
+    { label: 'Reports',    to: '/hod/reports',     icon: FileBarChart2   },
   ],
 }
 

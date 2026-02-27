@@ -23,6 +23,7 @@ import HodStudents       from '@/pages/hod/Students'
 import HodRequests       from '@/pages/hod/Requests'
 import HodSubjects       from '@/pages/hod/Subjects'
 import HodUploadStudents from '@/pages/hod/UploadStudents'
+import HodAttendance     from '@/pages/hod/HodAttendance'
 
 // Shared pages
 import Attendance from '@/pages/Attendance'
@@ -113,7 +114,7 @@ export default function App() {
           <Route path="/hod/upload-students" element={<HodUploadStudents />} />
           <Route path="/hod/subjects"        element={<HodSubjects />} />
           <Route path="/hod/requests"        element={<HodRequests />} />
-          <Route path="/hod/attendance"      element={<Attendance />} />
+          <Route path="/hod/attendance"      element={<HodAttendance />} />
           <Route path="/hod/reports"         element={<Reports />} />
           <Route path="/hod/settings"        element={<Settings />} />
         </Route>

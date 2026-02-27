@@ -47,8 +47,8 @@ export interface AttendanceRecord {
   date:       string
   /** Attendance status for this session */
   status:     'present' | 'absent'
-  /** Engagement score 1–5 (meaningful only when present) */
-  engagement: number
+  /** Whether the student was actively participating this session */
+  active:     boolean
   /** Unix timestamp (ms) when the record was created locally */
   createdAt:  number
   /** false until successfully POSTed to the remote API */
