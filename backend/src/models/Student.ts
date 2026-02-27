@@ -12,6 +12,8 @@ export interface IStudent extends Document {
   email:     string
   /** Hashed registration number — used as login password */
   regNo:     string
+  /** Plain-text registration number — safe to display */
+  rollNo:    string
   phone?:    string
   /** Array of subject codes the student is enrolled in */
   classId:   string[]
@@ -27,6 +29,7 @@ const studentSchema = new Schema<IStudent>(
     name:     { type: String, required: true, trim: true },
     email:    { type: String, required: true, unique: true, lowercase: true, trim: true },
     regNo:    { type: String, required: true },
+    rollNo:   { type: String, default: '' },
     phone:    { type: String, trim: true },
     classId:  { type: [String], default: [] },
     addedBy:  { type: String, required: true, trim: true },
