@@ -4,6 +4,8 @@ import { BrowserRouter } from 'react-router-dom'
 import { AuthProvider } from '@/context/AuthContext'
 import App from './App'
 import './index.css'
+// Keep Render free-tier backend alive so cold starts don't happen mid-session
+import '@/services/keepAlive'
 
 // Register service worker via vite-plugin-pwa
 if ('serviceWorker' in navigator) {

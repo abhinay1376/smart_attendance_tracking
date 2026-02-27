@@ -57,10 +57,12 @@ function AttendanceForm({
   date,
   onBack,
   onSaved,
+  onDateChange,
 }: {
-  date:    string
-  onBack:  () => void
-  onSaved: () => void
+  date:          string
+  onBack:        () => void
+  onSaved:       () => void
+  onDateChange:  (iso: string) => void
 }) {
   const {
     subjects, subjectId, setSubjectId, loadingStudents,
@@ -70,6 +72,7 @@ function AttendanceForm({
 
   const presentCount = rows.filter((r) => r.status === 'present').length
   const absentCount  = rows.length - presentCount
+  const todayISO     = new Date().toISOString().slice(0, 10)
 
   async function handleSaveAndNotify() {
     await handleSave()
@@ -84,12 +87,27 @@ function AttendanceForm({
         <Button variant="ghost" size="icon" onClick={onBack} className="-ml-1 shrink-0 mt-0.5" aria-label="Back to calendar">
           <ArrowLeft size={18} />
         </Button>
-        <div>
+        <div className="flex-1 min-w-0">
           <h1 className="text-2xl font-bold tracking-tight text-foreground">Mark Attendance</h1>
-          <p className="mt-0.5 text-sm text-muted-foreground flex items-center gap-1.5">
-            <CalendarDays size={13} />
-            {formatDateLabel(date)}
-          </p>
+          <div className="mt-1 flex flex-wrap items-center gap-2">
+            <p className="text-sm text-muted-foreground flex items-center gap-1.5">
+              <CalendarDays size={13} />
+              {formatDateLabel(date)}
+            </p>
+            <label className="inline-flex items-center gap-1 cursor-pointer group">
+              <span className="text-xs font-medium text-indigo-600 border border-indigo-200 rounded-full px-2 py-0.5 bg-indigo-50 group-hover:bg-indigo-100 dark:bg-indigo-950 dark:border-indigo-800 dark:text-indigo-400 transition-colors">
+                Change date
+              </span>
+              <input
+                type="date"
+                defaultValue={date}
+                max={todayISO}
+                onChange={(e) => { if (e.target.value && e.target.value !== date) onDateChange(e.target.value) }}
+                className="sr-only"
+                aria-label="Change attendance date"
+              />
+            </label>
+          </div>
         </div>
       </div>
 
@@ -341,9 +359,11 @@ export default function MarkAttendance() {
   // ── Attendance form view ──
   return (
     <AttendanceForm
+      key={selectedDate}
       date={selectedDate}
       onBack={handleBack}
       onSaved={handleSaved}
+      onDateChange={setSelectedDate}
     />
   )
 }

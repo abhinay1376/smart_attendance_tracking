@@ -1,4 +1,4 @@
-import { type FormEvent, useState } from 'react'
+import { type FormEvent, useEffect, useRef, useState } from 'react'
 import { useLocation, Navigate, Link } from 'react-router-dom'
 import { useAuth } from '@/context/AuthContext'
 import { ROLE_HOME } from '@/types/auth'
@@ -36,6 +36,19 @@ export default function Login() {
   const [password, setPassword] = useState('')
   const [error,    setError]    = useState<string | null>(null)
   const [loading,  setLoading]  = useState(false)
+  const [warmingUp, setWarmingUp] = useState(false)
+  const warmingTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // Show "warming up" banner if login takes > 4 seconds (Render cold start)
+  useEffect(() => {
+    if (loading) {
+      warmingTimer.current = setTimeout(() => setWarmingUp(true), 4000)
+    } else {
+      if (warmingTimer.current) clearTimeout(warmingTimer.current)
+      setWarmingUp(false)
+    }
+    return () => { if (warmingTimer.current) clearTimeout(warmingTimer.current) }
+  }, [loading])
 
   // Already authenticated → send to role home
   if (isAuthenticated && user) {
@@ -128,6 +141,19 @@ export default function Login() {
               </p>
             )}
 
+            {/* Cold-start warming-up banner */}
+            {warmingUp && !error && (
+              <div className="rounded-lg bg-amber-500/15 border border-amber-500/30 px-3 py-2.5 space-y-1">
+                <div className="flex items-center gap-2">
+                  <Loader2 size={12} className="animate-spin text-amber-300 shrink-0" />
+                  <span className="text-xs font-semibold text-amber-300">Backend is warming up…</span>
+                </div>
+                <p className="text-[11px] text-amber-400/80 leading-relaxed">
+                  The server was sleeping. This first sign-in may take up to 30–40 seconds. Please wait — you'll be signed in automatically.
+                </p>
+              </div>
+            )}
+
             {/* Submit */}
             <button
               type="submit"
@@ -139,7 +165,7 @@ export default function Login() {
               )}
             >
               {loading && <Loader2 size={15} className="animate-spin" />}
-              {loading ? 'Signing in…' : 'Sign in'}
+              {loading ? (warmingUp ? 'Warming up server…' : 'Signing in…') : 'Sign in'}
             </button>
           </form>
 
