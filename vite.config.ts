@@ -76,7 +76,7 @@ export default defineConfig({
         ],
       },
       devOptions: {
-        enabled: true,
+        enabled: false,   // SW causes blank screen in dev — only needed in prod build
         type: 'module',
       },
     }),
