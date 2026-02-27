@@ -13,6 +13,16 @@ import type { Request, Response, NextFunction } from 'express'
 import { Attendance } from '../models/Attendance'
 import { Helpdesk }   from '../models/Helpdesk'
 import { User }       from '../models/User'
+import { Subject }    from '../models/Subject'
+
+// ─── Subjects ────────────────────────────────────────────────────────────────
+
+export async function getMySubjects(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const subjects = await Subject.find({}, { _id: 1, name: 1, code: 1 }).sort({ name: 1 })
+    res.json(subjects)
+  } catch (err) { next(err) }
+}
 
 // ─── Attendance ───────────────────────────────────────────────────────────────
 

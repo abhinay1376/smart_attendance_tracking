@@ -300,7 +300,9 @@ export function apiFacultyToggleNotifyHod(ticketId: string, value: boolean) {
 }
 
 // ─── Student ──────────────────────────────────────────────────────────────────
-
+export function apiStudentGetSubjects() {
+  return apiFetch<Subject[]>('/student/subjects')
+}
 export function apiStudentGetTickets() {
   return apiFetch<HelpdeskTicket[]>('/student/helpdesk')
 }

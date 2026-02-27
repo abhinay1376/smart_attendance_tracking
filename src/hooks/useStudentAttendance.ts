@@ -26,7 +26,7 @@ import {
 }                              from '@/utils/attendanceCalc'
 import { getAllRecords }        from '@/services/db'
 import { seedDemoDataIfEmpty }  from '@/utils/seedDemoData'
-import { apiGetSubjects }       from '@/services/api'
+import { apiStudentGetSubjects } from '@/services/api'
 
 // ─── Return shape ──────────────────────────────────────────────────────────────
 
@@ -72,8 +72,8 @@ export function useStudentAttendance(): StudentAttendanceData {
 
       try {
         await seedDemoDataIfEmpty()
-        // ── Fetch API subjects for label lookup ─────────────────────────────
-        const apiSubs = await apiGetSubjects().catch(() => [])
+        // ── Fetch subjects for label lookup (student endpoint) ─────────────────────
+        const apiSubs = await apiStudentGetSubjects().catch(() => [])
         const subjectLabelMap: Record<string, string> = {}
         MOCK_SUBJECTS.forEach((s) => { subjectLabelMap[s.id] = s.label })       // static fallback
         apiSubs.forEach((s) => { subjectLabelMap[s._id] = s.name })            // real API names override
