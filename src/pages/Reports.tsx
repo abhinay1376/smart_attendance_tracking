@@ -1,39 +1,47 @@
 import { useEffect, useMemo, useState } from 'react'
 import {
-  BarChart,
-  Bar,
-  AreaChart,
-  Area,
-  PieChart,
-  Pie,
-  Cell,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
+  BarChart, Bar,
+  AreaChart, Area,
+  PieChart, Pie, Cell,
+  XAxis, YAxis, CartesianGrid,
 } from 'recharts'
 import { TrendingUp, Users, CheckCircle2, Zap } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+  Select, SelectContent, SelectItem,
+  SelectTrigger, SelectValue,
 } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
+import {
+  ChartContainer, ChartTooltip, ChartTooltipContent,
+  ChartLegend, ChartLegendContent, type ChartConfig,
+} from '@/components/ui/chart'
 import { getAllRecords, type AttendanceRecord } from '@/services/db'
 import { seedDemoDataIfEmpty } from '@/utils/seedDemoData'
 import { apiGetSubjects, apiFacultyGetSubjects, type Subject } from '@/services/api'
 import { useAuth } from '@/context/AuthContext'
 
-// ─── Chart colours ────────────────────────────────────────────────────────────
+// ─── Chart config & colours ───────────────────────────────────────────────────
 const C_PRESENT  = '#6366f1'
 const C_ABSENT   = '#f43f5e'
 const C_ACTIVE   = '#8b5cf6'
 const PIE_COLORS = [C_PRESENT, C_ABSENT, C_ACTIVE]
+
+const barConfig: ChartConfig = {
+  present: { label: 'Present', color: C_PRESENT },
+  absent:  { label: 'Absent',  color: C_ABSENT  },
+  active:  { label: 'Active',  color: C_ACTIVE  },
+}
+
+const areaConfig: ChartConfig = {
+  pct: { label: 'Attendance %', color: C_PRESENT },
+}
+
+const pieConfig: ChartConfig = {
+  Present: { label: 'Present', color: C_PRESENT },
+  Absent:  { label: 'Absent',  color: C_ABSENT  },
+  Active:  { label: 'Active',  color: C_ACTIVE  },
+}
 
 function shortDate(iso: string): string {
   const d = new Date(iso)
@@ -215,18 +223,18 @@ export default function Reports() {
             <CardTitle className="text-sm font-semibold">Attendance by Subject</CardTitle>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={280}>
+            <ChartContainer config={barConfig} className="h-[280px] w-full aspect-auto">
               <BarChart data={chartStats} barCategoryGap="30%">
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis dataKey="label" tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} interval={0} angle={-20} textAnchor="end" height={50} />
-                <YAxis tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} />
-                <Tooltip contentStyle={{ fontSize: 12, borderRadius: 8, border: '1px solid hsl(var(--border))', background: 'hsl(var(--card))' }} />
-                <Legend wrapperStyle={{ fontSize: 12 }} />
-                <Bar dataKey="present" name="Present" fill={C_PRESENT} radius={[4, 4, 0, 0]} />
-                <Bar dataKey="absent"  name="Absent"  fill={C_ABSENT}  radius={[4, 4, 0, 0]} />
-                <Bar dataKey="active"  name="Active"  fill={C_ACTIVE}  radius={[4, 4, 0, 0]} />
+                <XAxis dataKey="label" tick={{ fontSize: 11 }} interval={0} angle={-20} textAnchor="end" height={50} />
+                <YAxis tick={{ fontSize: 11 }} />
+                <ChartTooltip content={<ChartTooltipContent />} />
+                <ChartLegend content={<ChartLegendContent />} />
+                <Bar dataKey="present" name="present" fill={C_PRESENT} radius={[4, 4, 0, 0]} />
+                <Bar dataKey="absent"  name="absent"  fill={C_ABSENT}  radius={[4, 4, 0, 0]} />
+                <Bar dataKey="active"  name="active"  fill={C_ACTIVE}  radius={[4, 4, 0, 0]} />
               </BarChart>
-            </ResponsiveContainer>
+            </ChartContainer>
           </CardContent>
         </Card>
 
@@ -235,17 +243,21 @@ export default function Reports() {
             <CardTitle className="text-sm font-semibold">Overall Split</CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col items-center gap-4">
-            <ResponsiveContainer width="100%" height={220}>
+            <ChartContainer config={pieConfig} className="h-[220px] w-full aspect-auto">
               <PieChart>
-                <Pie data={pieData} cx="50%" cy="50%" innerRadius={55} outerRadius={90} paddingAngle={3} dataKey="value"
+                <Pie
+                  data={pieData}
+                  cx="50%" cy="50%"
+                  innerRadius={55} outerRadius={90}
+                  paddingAngle={3} dataKey="value"
                   label={({ name, percent }) => percent && percent > 0.03 ? `${name} ${Math.round(percent * 100)}%` : ''}
                   labelLine={false}
                 >
                   {pieData.map((_, i) => <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />)}
                 </Pie>
-                <Tooltip contentStyle={{ fontSize: 12, borderRadius: 8, border: '1px solid hsl(var(--border))', background: 'hsl(var(--card))' }} />
+                <ChartTooltip content={<ChartTooltipContent nameKey="name" />} />
               </PieChart>
-            </ResponsiveContainer>
+            </ChartContainer>
             <div className="flex flex-wrap justify-center gap-3 text-xs">
               {pieData.map((d, i) => (
                 <span key={d.name} className="flex items-center gap-1.5">
@@ -267,7 +279,7 @@ export default function Reports() {
           {dailyTrend.length === 0 ? (
             <p className="py-8 text-center text-sm text-muted-foreground">No daily data for selected filter.</p>
           ) : (
-            <ResponsiveContainer width="100%" height={220}>
+            <ChartContainer config={areaConfig} className="h-[220px] w-full aspect-auto">
               <AreaChart data={dailyTrend}>
                 <defs>
                   <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
@@ -276,12 +288,20 @@ export default function Reports() {
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis dataKey="label" tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} />
-                <YAxis domain={[0, 100]} tickFormatter={(v) => `${v}%`} tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} />
-                <Tooltip formatter={(v) => [`${v}%`, 'Attendance']} contentStyle={{ fontSize: 12, borderRadius: 8, border: '1px solid hsl(var(--border))', background: 'hsl(var(--card))' }} />
-                <Area type="monotone" dataKey="pct" name="Attendance %" stroke={C_PRESENT} strokeWidth={2} fill="url(#areaGrad)" dot={{ r: 3, fill: C_PRESENT }} />
+                <XAxis dataKey="label" tick={{ fontSize: 11 }} />
+                <YAxis domain={[0, 100]} tickFormatter={(v) => `${v}%`} tick={{ fontSize: 11 }} />
+                <ChartTooltip
+                  content={<ChartTooltipContent />}
+                  formatter={(v) => [`${v}%`, 'Attendance']}
+                />
+                <Area
+                  type="monotone" dataKey="pct" name="pct"
+                  stroke={C_PRESENT} strokeWidth={2}
+                  fill="url(#areaGrad)"
+                  dot={{ r: 3, fill: C_PRESENT }}
+                />
               </AreaChart>
-            </ResponsiveContainer>
+            </ChartContainer>
           )}
         </CardContent>
       </Card>

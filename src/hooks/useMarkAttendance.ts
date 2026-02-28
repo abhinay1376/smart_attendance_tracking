@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { saveBatchRecords, getAllRecords, type AttendanceRecord } from '@/services/db'
 import { apiFacultyGetStudents, apiFacultyGetSubjects, type Subject, type Student as ApiStudent } from '@/services/api'
+import { syncPendingRecords } from '@/services/sync'
 import { generateId } from '@/utils/helpers'
 import { useAuth } from '@/context/AuthContext'
 import { notifyFacultyConsecutiveAbsent } from '@/services/notifications'
@@ -203,6 +204,18 @@ export function useMarkAttendance(date?: string): UseMarkAttendanceReturn {
     try {
       await saveBatchRecords(records)
       setSavedCount(records.length)
+
+      // ── Immediate sync if already online ────────────────────────────────
+      // The window "online" event only fires when reconnecting, so if the
+      // faculty is already online when they hit Save we trigger a sync here.
+      // syncPendingRecords() has a built-in _isSyncing guard, so calling it
+      // here and from useSync simultaneously is always safe.
+      if (navigator.onLine) {
+        syncPendingRecords().catch(() => {
+          // Sync failure is non-critical — record is safely stored in IndexedDB
+          // and will be picked up on the next sync attempt.
+        })
+      }
 
       // ── Consecutive-absent notifications (non-critical) ─────────────────
       const absentRows = rows.filter((r) => r.status === 'absent')

@@ -19,7 +19,7 @@ import {
 
 import { cn } from '@/utils/helpers'
 import { getAllRecords } from '@/services/db'
-import { MOCK_STUDENTS, MOCK_SUBJECTS } from '@/data/mockData'
+import { apiFacultyGetStudents, apiFacultyGetSubjects } from '@/services/api'
 
 // ─── Storage key for imported rows ───────────────────────────────────────────
 
@@ -208,21 +208,61 @@ export default function AttendanceData() {
     try {
       const records = await getAllRecords()
 
-      // Build per-student-per-subject tally
-      const tally = new Map<string, { attended: number; total: number }>()
+      // ── Build per-student-per-subject tally ────────────────────────────────
+      // Key: `{studentId}|{subjectId}`, also store courseId for student lookup
+      const tally = new Map<string, { attended: number; total: number; courseId: string }>()
       for (const r of records) {
         const key = `${r.studentId}|${r.subjectId}`
-        const cur = tally.get(key) ?? { attended: 0, total: 0 }
+        const cur = tally.get(key) ?? { attended: 0, total: 0, courseId: r.courseId }
         cur.total   += 1
         cur.attended += r.status === 'present' ? 1 : 0
         tally.set(key, cur)
       }
 
-      // Build rows for Excel — join with mock data for names
-      const studentMap = new Map(MOCK_STUDENTS.map((s) => [s.id, s]))
-      const subjectMap = new Map(MOCK_SUBJECTS.map((s) => [s.id, s]))
+      // ── Fetch real subject and student data from API ────────────────────────
+      const subjects = await apiFacultyGetSubjects().catch(() => [] as Awaited<ReturnType<typeof apiFacultyGetSubjects>>)
+      const subjectApiMap = new Map(subjects.map((s) => [s._id, s]))
 
-      // Also include imported rows
+      // Collect unique subject codes so we can fetch each batch of students
+      const uniqueCodes = [...new Set(
+        [...tally.values()].map((v) => v.courseId).filter(Boolean),
+      )]
+
+      const studentApiMap = new Map<string, { name: string; rollNo: string }>()
+      await Promise.all(
+        uniqueCodes.map((code) =>
+          apiFacultyGetStudents(code)
+            .then((students) => {
+              students.forEach((s) =>
+                studentApiMap.set(s._id, {
+                  name:   s.name,
+                  rollNo: s.rollNo ?? s.regNo ?? '',
+                }),
+              )
+            })
+            .catch(() => { /* skip if one batch fails */ }),
+        ),
+      )
+
+      // ── Build Excel rows from live IndexedDB data ──────────────────────────
+      const liveRows: Array<Record<string, number | string>> = []
+      for (const [key, { attended, total, courseId }] of tally.entries()) {
+        const [studentId, subjectId] = key.split('|')
+        const student = studentApiMap.get(studentId)
+        const subject = subjectApiMap.get(subjectId)
+        const percent = total > 0 ? Math.round((attended / total) * 100) : 0
+        liveRows.push({
+          Name:               student?.name   ?? `Student (${studentId.slice(-6)})`,
+          'Reg No':           student?.rollNo ?? '—',
+          Subject:            subject?.name   ?? courseId ?? `Subject (${subjectId.slice(-6)})`,
+          'Attended Classes': attended,
+          'Total Classes':    total,
+          'Percentage':       percent,
+          Source:             'Live',
+        })
+      }
+
+      // ── Also include imported rows ─────────────────────────────────────────
       const importedXlsRows: Array<Record<string, number | string>> = imported.map((r) => ({
         Name:               r.name,
         'Reg No':           r.regNo,
@@ -232,23 +272,6 @@ export default function AttendanceData() {
         'Percentage':       r.percent,
         Source:             'Imported',
       }))
-
-      const liveRows: Array<Record<string, number | string>> = []
-      for (const [key, { attended, total }] of tally.entries()) {
-        const [studentId, subjectId] = key.split('|')
-        const student = studentMap.get(studentId)
-        const subject = subjectMap.get(subjectId)
-        const percent = total > 0 ? Math.round((attended / total) * 100) : 0
-        liveRows.push({
-          Name:               student?.name   ?? studentId,
-          'Reg No':           student?.rollNo ?? '—',
-          Subject:            subject?.label  ?? subjectId,
-          'Attended Classes': attended,
-          'Total Classes':    total,
-          'Percentage':       percent,
-          Source:             'Live',
-        })
-      }
 
       const allRows = [...liveRows, ...importedXlsRows]
 

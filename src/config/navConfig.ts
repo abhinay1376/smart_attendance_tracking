@@ -40,7 +40,6 @@ export const NAV_CONFIG: Record<Role, NavItem[]> = {
   hod: [
     { label: 'Dashboard',  to: '/hod/dashboard',   icon: LayoutDashboard },
     { label: 'Faculty',    to: '/hod/faculty',     icon: Users           },
-    { label: 'Students',   to: '/hod/students',    icon: GraduationCap   },
     { label: 'Subjects',   to: '/hod/subjects',    icon: BookMarked      },
     { label: 'Requests',   to: '/hod/requests',    icon: UserPlus        },
     { label: 'Attendance', to: '/hod/attendance',  icon: ClipboardCheck  },
