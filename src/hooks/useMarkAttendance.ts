@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { saveBatchRecords, getAllRecords, type AttendanceRecord } from '@/services/db'
 import { apiFacultyGetStudents, apiFacultyGetSubjects, type Subject, type Student as ApiStudent } from '@/services/api'
 import { syncPendingRecords } from '@/services/sync'
@@ -76,6 +76,15 @@ export function useMarkAttendance(date?: string): UseMarkAttendanceReturn {
   const [savedCount,      setSavedCount]      = useState<number | null>(null)
   const [error,           setError]           = useState<string | null>(null)
 
+  // ─── subjects ref ──────────────────────────────────────────────────────────
+  // Keep a ref in sync so the student-loading effect can read the latest
+  // subjects list WITHOUT including `subjects` in its dependency array.
+  // If `subjects` were a dependency, any network update that refreshes the
+  // list would re-run the effect and call setRows(all-present), silently
+  // overwriting whatever the faculty had toggled.
+  const subjectsRef = useRef<Subject[]>([])
+  useEffect(() => { subjectsRef.current = subjects }, [subjects])
+
   /** Load faculty's assigned subjects — network first, cache fallback */
   useEffect(() => {
     // Immediately show cached subjects so offline users see the dropdown
@@ -93,10 +102,17 @@ export function useMarkAttendance(date?: string): UseMarkAttendanceReturn {
       })
   }, [])
 
-  /** When subject selection changes, load students — network first, cache fallback */
+  /** When subject selection changes, load students — network first, cache fallback.
+   *
+   * NOTE: intentionally does NOT list `subjects` as a dependency.
+   * `subjectsRef.current` is always up-to-date (see above) and reading it
+   * here avoids re-running this effect—and therefore re-resetting all rows—
+   * every time the subjects network call resolves.
+   */
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (!subjectId) { setRows([]); return }
-    const sub = subjects.find((s) => s._id === subjectId)
+    const sub = subjectsRef.current.find((s) => s._id === subjectId)
     if (!sub) { setRows([]); return }
 
     setLoadingStudents(true)
@@ -146,7 +162,8 @@ export function useMarkAttendance(date?: string): UseMarkAttendanceReturn {
         }
       })
       .finally(() => setLoadingStudents(false))
-  }, [subjectId, subjects])
+  // Only `subjectId` here — see comment above re: subjectsRef
+  }, [subjectId])
 
   const setSubjectId = useCallback((id: string) => {
     setSubjectIdRaw(id)
