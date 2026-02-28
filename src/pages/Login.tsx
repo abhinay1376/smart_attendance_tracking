@@ -5,29 +5,6 @@ import { ROLE_HOME } from '@/types/auth'
 import { cn } from '@/utils/helpers'
 import { Loader2, UserPlus } from 'lucide-react'
 
-/** Demo credentials shown inside the card for easy testing */
-const DEMO_HINTS = [
-  // ── Admin ──────────────────────────────────────────────────────────────────
-  { role: 'Admin',   label: 'Administrator',       email: 'admin@gmail.com',              password: 'admin123',    badge: 'hod'     },
-  // ── Faculty ────────────────────────────────────────────────────────────────
-  { role: 'Faculty', label: 'Dr. Ramesh Kumar',    email: 'ramesh.kumar@college.edu',     password: 'faculty123', badge: 'faculty' },
-  { role: 'Faculty', label: 'Prof. Sunita Sharma', email: 'sunita.sharma@college.edu',    password: 'faculty123', badge: 'faculty' },
-  { role: 'Faculty', label: 'Dr. Anil Verma',      email: 'anil.verma@college.edu',       password: 'faculty123', badge: 'faculty' },
-  // ── Students ───────────────────────────────────────────────────────────────
-  { role: 'Student', label: 'Aarav Singh',         email: 'aarav.singh@student.edu',      password: 'CS2021001',  badge: 'student' },
-  { role: 'Student', label: 'Diya Patel',          email: 'diya.patel@student.edu',       password: 'CS2021002',  badge: 'student' },
-  { role: 'Student', label: 'Vivaan Mehta',        email: 'vivaan.mehta@student.edu',     password: 'CS2021003',  badge: 'student' },
-  { role: 'Student', label: 'Ananya Reddy',        email: 'ananya.reddy@student.edu',     password: 'CS2021004',  badge: 'student' },
-  { role: 'Student', label: 'Arjun Gupta',         email: 'arjun.gupta@student.edu',      password: 'CS2021005',  badge: 'student' },
-  { role: 'Student', label: 'Kavya Pillai',        email: 'kavya.pillai@student.edu',     password: 'EC2021001',  badge: 'student' },
-] as const
-
-const BADGE_STYLES: Record<string, string> = {
-  hod:     'bg-violet-500/20 text-violet-300 border-violet-500/30',
-  faculty: 'bg-sky-500/20    text-sky-300    border-sky-500/30',
-  student: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30',
-}
-
 export default function Login() {
   const { login, isAuthenticated, user } = useAuth()
   const location  = useLocation()
@@ -168,40 +145,6 @@ export default function Login() {
               {loading ? (warmingUp ? 'Warming up server…' : 'Signing in…') : 'Sign in'}
             </button>
           </form>
-
-          {/* ── Demo hint ── */}
-          <div className="border-t border-white/10 pt-4 space-y-3">
-            <p className="text-[11px] font-medium text-indigo-400 uppercase tracking-wider">
-              Quick sign-in
-            </p>
-            <div className="flex flex-col gap-1.5">
-              {DEMO_HINTS.map(({ role, label, email: hint, password: pass, badge }) => (
-                <button
-                  key={hint}
-                  type="button"
-                  onClick={() => { setEmail(hint); setPassword(pass) }}
-                  className={cn(
-                    'flex items-center gap-3 w-full rounded-lg border border-white/8 bg-white/5 px-3 py-2',
-                    'hover:bg-white/10 transition-colors text-left group',
-                  )}
-                >
-                  <span className={cn(
-                    'shrink-0 rounded-full border px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wider',
-                    BADGE_STYLES[badge],
-                  )}>
-                    {role}
-                  </span>
-                  <span className="flex-1 min-w-0">
-                    <span className="block text-[12px] font-medium text-white leading-tight truncate">{label}</span>
-                    <span className="block text-[10px] text-indigo-400 truncate">{hint}</span>
-                  </span>
-                  <span className="shrink-0 text-[10px] text-indigo-500 group-hover:text-indigo-300 font-mono">
-                    {pass}
-                  </span>
-                </button>
-              ))}
-            </div>
-          </div>
 
           {/* ── Faculty signup link ── */}
           <div className="border-t border-white/10 pt-4 text-center">
