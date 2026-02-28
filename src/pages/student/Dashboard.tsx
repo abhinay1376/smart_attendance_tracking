@@ -23,8 +23,6 @@ import {
   BarChart,
   CartesianGrid,
   Cell,
-  ResponsiveContainer,
-  Tooltip,
   XAxis,
   YAxis,
 } from 'recharts'
@@ -34,6 +32,9 @@ import { useStudentAttendance }    from '@/hooks/useStudentAttendance'
 import { ATTENDANCE_THRESHOLD }    from '@/utils/attendanceCalc'
 import { Progress }                from '@/components/ui/progress'
 import { cn }                      from '@/utils/helpers'
+import {
+  ChartContainer, ChartTooltip, type ChartConfig,
+} from '@/components/ui/chart'
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -51,15 +52,21 @@ function pctColor(pct: number): string {
   return '#ef4444'                   // red-500
 }
 
-// ─── Custom recharts tooltip ──────────────────────────────────────────────────
+// ─── Chart config ────────────────────────────────────────────────────────────
 
-interface TooltipEntry {
+const subjectChartConfig: ChartConfig = {
+  percentage: { label: 'Attendance %', color: '#6366f1' },
+}
+
+// ─── Custom bar tooltip ───────────────────────────────────────────────────────
+
+interface BarTooltipEntry {
   payload?: { attended: number; total: number; percentage: number }
 }
 
-function ChartTooltip({ active, payload, label }: {
+function BarTooltip({ active, payload, label }: {
   active?:  boolean
-  payload?: TooltipEntry[]
+  payload?: BarTooltipEntry[]
   label?:   string
 }) {
   if (!active || !payload?.length) return null
@@ -248,7 +255,7 @@ export default function StudentDashboard() {
       <div className="rounded-xl border border-border bg-card p-4 sm:p-6 shadow-sm">
         <h2 className="mb-4 sm:mb-5 text-sm font-semibold text-foreground">Subject-wise Attendance</h2>
 
-        <ResponsiveContainer width="100%" height={200}>
+        <ChartContainer config={subjectChartConfig} className="h-[200px] w-full aspect-auto">
           <BarChart
             data={subjects.map((s) => ({
               name:       s.label.split(' ').slice(0, 2).join(' '),
@@ -267,26 +274,25 @@ export default function StudentDashboard() {
             />
             <XAxis
               dataKey="name"
-              tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
+              tick={{ fontSize: 11 }}
               axisLine={false}
               tickLine={false}
             />
             <YAxis
               domain={[0, 100]}
               tickFormatter={(v: number) => `${v}%`}
-              tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
+              tick={{ fontSize: 11 }}
               axisLine={false}
               tickLine={false}
             />
-            {/* Threshold reference — second CartesianGrid layer with a single y value */}
             <CartesianGrid
               strokeDasharray="6 3"
               stroke="#f59e0b"
               horizontal
               vertical={false}
             />
-            <Tooltip
-              content={<ChartTooltip />}
+            <ChartTooltip
+              content={<BarTooltip />}
               cursor={{ fill: 'hsl(var(--muted))', opacity: 0.4 }}
             />
             <Bar dataKey="percentage" radius={[6, 6, 0, 0]}>
@@ -295,7 +301,7 @@ export default function StudentDashboard() {
               ))}
             </Bar>
           </BarChart>
-        </ResponsiveContainer>
+        </ChartContainer>
 
         <p className="mt-2 text-center text-[11px] text-muted-foreground">
           Dashed amber grid = {ATTENDANCE_THRESHOLD}% minimum threshold
